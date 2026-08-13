@@ -5,33 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>応募状況一覧 - DXPRO SOLUTIONS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 p-6 font-sans min-h-screen">
+<body class="bg-gray-50 p-6 font-['Noto_Sans_JP'] min-h-screen">
 
   <div class="max-w-6xl mx-auto mt-10">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">応募状況一覧</h2>
-      <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-200">
-        ホームに戻る
+    <div class="flex justify-between items-center mb-8">
+      <div class="flex items-center gap-3">
+        <span class="w-1.5 h-8 bg-blue-700 rounded-full"></span>
+        <h2 class="text-2xl font-bold text-gray-900">応募状況一覧</h2>
+      </div>
+      <a href="/" class="border border-gray-200 hover:bg-gray-50 text-gray-600 font-semibold py-2.5 px-5 rounded-xl transition duration-200 inline-flex items-center gap-1.5">
+        <i class="fas fa-arrow-left text-xs"></i>ホームに戻る
       </a>
     </div>
 
-    <div class="overflow-x-auto rounded-xl shadow-md bg-white">
-      <table id="appTable" class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
+    <div class="overflow-x-auto rounded-2xl border border-gray-100 bg-white">
+      <table id="appTable" class="min-w-full divide-y divide-gray-100">
+        <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">日付</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">応募タイプ</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">名前</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">メール</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">応募ポジション</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">ステータス</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">日付</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">応募タイプ</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">名前</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">メール</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">応募ポジション</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ステータス</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200"></tbody>
+        <tbody class="bg-white divide-y divide-gray-100"></tbody>
       </table>
     </div>
   </div>
+
 
   <script>
     // ポジション表示名

@@ -19,8 +19,8 @@
       color: white;
     }
     .form-input:focus {
-      border-color: rgba(16, 185, 129, 0.6);
-      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+      border-color: rgba(37, 99, 235, 0.6);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
       background: rgba(255, 255, 255, 0.08);
       transform: translateY(-2px);
     }
@@ -29,11 +29,11 @@
     }
     .login-btn {
       transition: all 0.3s ease;
-      background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+      background: linear-gradient(135deg, #2563eb 0%, #7e22ce 100%);
     }
     .login-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
     }
     .card-glass {
       background: rgba(255, 255, 255, 0.08);
@@ -56,7 +56,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.3);
+      filter: brightness(0.35) blur(2px);
       z-index: -1;
       opacity: 0;
       transition: opacity 1s ease;
@@ -78,7 +78,7 @@
     .dynamic-bg-element {
       position: fixed;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
       z-index: -1;
       animation: float 15s infinite linear;
     }
@@ -131,14 +131,9 @@
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 md:p-8">
-  <!-- 배경 비디오 - 여러 소스 제공 -->
-  <video id="bgVideo" autoplay muted loop class="background-video" preload="auto">
-    <!-- 첫 번째 비디오 소스 (로컬) -->
-    <source src="/videos/office-work.mp4" type="video/mp4">
-    <!-- 두 번째 비디오 소스 (외부 - Pexels) -->
-    <source src="https://static.videezy.com/system/resources/previews/000/042/289/or-free/office_people_01_1080p.mp4" type="video/mp4">
-    <!-- 세 번째 비디오 소스 (외부 - Coverr) -->
-    <source src="https://storage.coverr.co/videos/coverr-people-working-together-1562590038774?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Ijg3NjdFMzIzRjlGQzEzN0E4QTAyIiwiaWF0IjoxNjI0NzY0MzgxfQ._RrLb4VjP1g6N-6vC7xU7n7xQ7X9ZJ8Z9X9ZJ8Z9X9" type="video/mp4">
+  <!-- 배경 비디오 -->
+  <video id="bgVideo" autoplay muted loop playsinline class="background-video" preload="auto">
+    <source src="/pic/video.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
   <div class="video-fallback"></div>
@@ -155,7 +150,7 @@
     <!-- 左側: 説明セクション -->
     <div class="card-glass rounded-2xl p-8 w-full md:w-2/5 text-white">
       <div class="flex items-center justify-center mb-8">
-        <div class="w-20 h-20 rounded-full bg-gradient-to-r from-green-900/30 to-blue-900/30 flex items-center justify-center shadow-lg">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-r from-blue-900/30 to-purple-900/30 flex items-center justify-center shadow-lg">
           <i class="fas fa-lock text-3xl text-white"></i>
         </div>
       </div>
@@ -165,11 +160,11 @@
       
       <div class="space-y-6 mb-8">
         <div class="info-item flex items-start gap-4 p-4 rounded-xl bg-white/5">
-          <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-user-check text-green-400"></i>
+          <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user-check text-blue-400"></i>
           </div>
           <div>
-            <h3 class="font-semibold text-green-300">応募状況の確認</h3>
+            <h3 class="font-semibold text-blue-300">応募状況の確認</h3>
             <p class="text-sm text-gray-300 mt-1">これまでに応募した職務の進捗状況を確認できます</p>
           </div>
         </div>
@@ -224,11 +219,11 @@
         
         <div class="flex items-center justify-between">
           <label class="inline-flex items-center text-white">
-            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 bg-gray-800 border-gray-600 rounded">
+            <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-800 border-gray-600 rounded">
             <span class="ml-2">ログイン状態を保持</span>
           </label>
           
-          <a href="/forgot-password.html" class="text-green-400 hover:text-green-300 text-sm transition-colors">
+          <a href="/forgot-password.html" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
             パスワードをお忘れですか？
           </a>
         </div>
@@ -242,7 +237,7 @@
       <div class="mt-8 pt-6 border-t border-gray-700">
         <h3 class="text-white font-medium mb-4">ログインに関するお問い合わせ</h3>
         <p class="text-gray-400 text-sm mb-2">ログインに問題がある場合やアカウントの確認が必要な場合は、下記までご連絡ください。</p>
-        <div class="flex items-center text-green-400">
+        <div class="flex items-center text-blue-400">
           <i class="fas fa-envelope mr-2"></i>
           <span class="email-link" id="emailContact">recruit@dxpro-sol.com</span>
         </div>
@@ -257,7 +252,7 @@
       <p class="text-gray-300 mb-6">メールアプリを開いて recruit@dxpro-sol.com に問い合わせますか？</p>
       <div class="flex justify-end space-x-4">
         <button id="cancelEmail" class="px-4 py-2 rounded-xl bg-gray-600 text-white hover:bg-gray-700 transition-colors">キャンセル</button>
-        <button id="confirmEmail" class="px-4 py-2 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-colors">メールを送信</button>
+        <button id="confirmEmail" class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors">メールを送信</button>
       </div>
     </div>
   </div>
@@ -299,7 +294,7 @@
     // 동적 배경 요소 생성
     function createDynamicBackground() {
       const colors = [
-        'rgba(16, 185, 129, 0.1)', 
+        'rgba(37, 99, 235, 0.1)', 
         'rgba(14, 165, 233, 0.1)', 
         'rgba(139, 92, 246, 0.1)'
       ];

@@ -4,20 +4,58 @@
   <meta charset="UTF-8">
   <title>新規登録 - DXPRO SOLUTIONS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .form-input {
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    .form-input:focus {
+      border-color: rgba(37, 99, 235, 0.6);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+      outline: none;
+    }
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .card-glass {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb 0%, #7e22ce 100%);
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-green-50 to-gray-50 min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-  <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-3xl space-y-8">
+  <div class="card-glass rounded-2xl p-10 w-full max-w-3xl space-y-8 text-white">
     <!-- タイトル -->
-    <h2 class="text-3xl font-bold text-green-700 text-center">新規登録</h2>
+    <h2 class="text-3xl font-bold text-center">新規登録</h2>
 
     <!-- 案内文 -->
-    <div class="bg-green-50 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
-      <h3 class="text-lg font-semibold text-green-700 mb-2">会員登録の目的とデータ保存について</h3>
-      <p class="text-gray-700 leading-relaxed">
+    <div class="bg-blue-500/10 border-l-4 border-blue-400 p-5 rounded-xl">
+      <h3 class="text-lg font-semibold text-blue-300 mb-2">会員登録の目的とデータ保存について</h3>
+      <p class="text-white/80 leading-relaxed">
         ご登録いただいた情報は、採用応募に関する管理のために使用されます。<br>
-        応募中のユーザーの場合、<span class="font-semibold text-green-700">応募が完了した日から10日以内</span>に情報は自動的に削除されます。<br>
-        応募していないユーザーの場合は、<span class="font-semibold text-green-700">登録から5日以内</span>にアカウントが自動的に削除されます。
+        応募中のユーザーの場合、<span class="font-semibold text-blue-300">応募が完了した日から10日以内</span>に情報は自動的に削除されます。<br>
+        応募していないユーザーの場合は、<span class="font-semibold text-blue-300">登録から5日以内</span>にアカウントが自動的に削除されます。
       </p>
     </div>
 
@@ -25,104 +63,108 @@
     <form action="/register" method="post" class="space-y-4" id="registerForm">
       <!-- 基本情報 -->
       <input type="text" name="username" placeholder="ログインID" required
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+        class="form-input w-full p-3 rounded-xl">
       <input type="password" name="password" placeholder="パスワード" required
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+        class="form-input w-full p-3 rounded-xl">
 
       <!-- 名前 -->
       <div class="grid grid-cols-2 gap-4">
         <input type="text" name="lastName" placeholder="姓" required
-          class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+          class="form-input w-full p-3 rounded-xl">
         <input type="text" name="firstName" placeholder="名" required
-          class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+          class="form-input w-full p-3 rounded-xl">
       </div>
 
       <!-- ふりがな -->
       <div class="grid grid-cols-2 gap-4">
         <input type="text" name="hurilastName" placeholder="姓（フリガナ）" required
-          class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+          class="form-input w-full p-3 rounded-xl">
         <input type="text" name="hurifirstName" placeholder="名（フリガナ）" required
-          class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+          class="form-input w-full p-3 rounded-xl">
       </div>
 
-      <br>
       <!-- 生年月日 -->
-      <span class="text-gray-700 font-medium">生年月日</span>
-      <input type="date" name="birthdate" placeholder="生年月日" required
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+      <div>
+        <span class="text-white/80 font-medium block mb-1.5">生年月日</span>
+        <input type="date" name="birthdate" placeholder="生年月日" required
+          class="form-input w-full p-3 rounded-xl">
+      </div>
 
       <!-- 応募区分 -->
       <div class="mt-2">
-        <span class="text-gray-700 font-medium">応募区分</span>
+        <span class="text-white/80 font-medium">応募区分</span>
         <div class="flex space-x-6 mt-2">
           <label class="inline-flex items-center">
-            <input type="radio" name="employmentType" value="newGrad" class="text-green-600" required>
+            <input type="radio" name="employmentType" value="newGrad" class="text-blue-500" required>
             <span class="ml-2">新卒</span>
           </label>
           <label class="inline-flex items-center">
-            <input type="radio" name="employmentType" value="midCareer" class="text-green-600">
+            <input type="radio" name="employmentType" value="midCareer" class="text-blue-500">
             <span class="ml-2">中途</span>
           </label>
         </div>
       </div>
-      <br>
+
       <!-- 新卒用 -->
       <div id="newGradFields" class="space-y-2 hidden mt-2">
-        <span class="text-gray-700 font-medium">卒業予定学校名</span>
+        <span class="text-white/80 font-medium">卒業予定学校名</span>
         <input type="text" name="graduationSchool" placeholder="例）白石大学"
-          class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-        <span class="text-gray-700 font-medium">卒業予定年月</span>
+          class="form-input w-full p-3 rounded-xl">
+        <span class="text-white/80 font-medium">卒業予定年月</span>
         <input type="month" name="expectedGraduation" 
          min="2000-01" max="2099-12" 
-         class="mt-1 border rounded-lg p-3 w-full shadow-sm"
+         class="form-input w-full p-3 rounded-xl"
          placeholder="例: 2025-03">
       </div>
 
       <!-- 中途用 -->
       <div id="midCareerFields" class="space-y-2 hidden mt-2">
         <label class="flex items-center space-x-2">
-          <input type="checkbox" name="hasCurrentJob" id="hasCurrentJob" class="text-green-600">
+          <input type="checkbox" name="hasCurrentJob" id="hasCurrentJob" class="text-blue-500">
           <span>現職がある</span>
         </label>
         <div id="currentJobFields" class="space-y-2 hidden">
-          <span class="text-gray-700">退職予定日</span>
+          <span class="text-white/70">退職予定日</span>
           <input type="date" name="expectedResignation"
-            class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-          <span class="text-gray-700">入社希望日</span>
+            class="form-input w-full p-3 rounded-xl">
+          <span class="text-white/70">入社希望日</span>
           <input type="date" name="desiredJoinDate"
-            class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+            class="form-input w-full p-3 rounded-xl">
         </div>
       </div>
 
       <!-- メール・電話 -->
-      <span class="text-gray-700 font-medium">メールアドレス</span>
-      <input type="email" name="email" placeholder="メールアドレス" required
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-      <br><br>
-      <span class="text-gray-700 font-medium">電話番号（携帯）</span>
-      <input type="tel" name="phone" placeholder="例: 080-0000-1111" required
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+      <div>
+        <span class="text-white/80 font-medium block mb-1.5">メールアドレス</span>
+        <input type="email" name="email" placeholder="メールアドレス" required
+          class="form-input w-full p-3 rounded-xl">
+      </div>
+      <div>
+        <span class="text-white/80 font-medium block mb-1.5">電話番号（携帯）</span>
+        <input type="tel" name="phone" placeholder="例: 080-0000-1111" required
+          class="form-input w-full p-3 rounded-xl">
+      </div>
 
       <!-- 同意セクション -->
       <div class="mt-6">
-        <label class="block text-gray-800 font-semibold mb-2">利用規約・個人情報保護方針</label>
+        <label class="block text-white font-semibold mb-2">利用規約・個人情報保護方針</label>
         
         <!-- スクロールできるポリシーボックス -->
-        <div class="border rounded-lg p-4 h-64 overflow-y-auto text-sm text-gray-700 mb-3">
+        <div class="border border-white/10 bg-white/5 rounded-xl p-4 h-64 overflow-y-auto text-sm text-white/70 mb-3">
         <p>DXPRO SOLUTIONS（以下「当社」）は、以下のとおり個人情報保護方針を定め、個人情報保護の仕組みを構築し、個人情報の保護を推進・実施致します。</p>
-        <br><h4 class="font-semibold mt-2">個人情報の管理</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">個人情報の管理</h4>
         <p>当社はお客さまからお預かりする個人情報について、個人情報への不正アクセス・紛失・破損・改ざん・漏洩などを防止するため、セキュリティシステムの維持・管理体制の整備等の必要な措置を講じ、厳重な管理を行ないます。</p>
-        <br><h4 class="font-semibold mt-2">個人情報の利用目的</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">個人情報の利用目的</h4>
         <p>当社がお預かりする個人情報は、当サービスのご利用とご提供に伴う以下の目的のために利用いたします。</p>
-        <br><h4 class="font-semibold mt-2">個人情報の第三者への開示・提供の禁止</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">個人情報の第三者への開示・提供の禁止</h4>
         <p>当社は、お客さまよりお預かりした個人情報を適切に管理し、次のいずれかに該当する場合を除き、個人情報を第三者に開示いたしません。</p>
-        <br><h4 class="font-semibold mt-2">個人情報の安全対策</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">個人情報の安全対策</h4>
         <p>当社は、個人情報の正確性及び安全性確保のために、セキュリティに万全の対策を講じています。</p>
-        <br><h4 class="font-semibold mt-2">ご本人の照合</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">ご本人の照合</h4>
         <p>当社のお客さまがご本人の個人情報の照会・修正・削除などをご希望される場合には、ご本人であることを確認の上、対応させていただきます。</p>
-        <br><h4 class="font-semibold mt-2">法令、規範の遵守と見直し</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">法令、規範の遵守と見直し</h4>
         <p>当社は、保有する個人情報に関して適用される日本の法令、その他規範を遵守するとともに、本ポリシーの内容を適宜見直し、その改善に努めます。</p><br>
-        <br><h4 class="font-semibold mt-2">個人情報に関するお問い合わせ先</h4>
+        <br><h4 class="font-semibold mt-2 text-white/90">個人情報に関するお問い合わせ先</h4>
         <p>合同会社 ディーエックスソリューションズ<br>
         個人情報保護管理責任者宛<br>
         E-mail: info@dxpro-sol.com<br>
@@ -133,23 +175,24 @@
 
         <!-- チェックボックス -->
         <div class="flex items-center">
-          <input type="checkbox" name="consent" required class="form-checkbox text-green-600">
-          <span class="ml-2 text-gray-700">利用規約に同意する</span>
+          <input type="checkbox" name="consent" required class="form-checkbox text-blue-500">
+          <span class="ml-2 text-white/80">利用規約に同意する</span>
         </div>
       </div>
 
 
       <button type="submit"
-        class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition">
+        class="btn-primary w-full text-white font-semibold py-3 rounded-xl">
         登録
       </button>
     </form>
 
-    <p class="text-center mt-4 text-gray-600">
+    <p class="text-center mt-4 text-white/60">
       既にアカウントをお持ちの方は
-      <a href="/login.html" class="text-green-600 hover:underline font-semibold">ログイン</a>
+      <a href="/login.html" class="text-blue-400 hover:underline font-semibold">ログイン</a>
     </p>
   </div>
+
 
   <script>
     const newGradFields = document.getElementById("newGradFields");

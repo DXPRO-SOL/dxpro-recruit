@@ -8,192 +8,214 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-830 font-['Noto_Sans_JP']">
+<body class="bg-gray-50 text-gray-800 font-['Noto_Sans_JP']">
       <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover filter blur-sm brightness-50 z-0">
         <source src="pic/video.mp4" type="video/mp4">
       </video>
 <div class="flex min-h-screen relative z-10">
 
   <!-- 左サイドバー -->
-  <nav class="w-64 bg-gradient-to-b from-blue-800 to-blue-600 text-white shadow-lg p-6 flex flex-col sticky top-0 h-screen">
-    <a href="index.html" class="flex items-center gap-3 mb-8">
+  <nav class="w-64 bg-gradient-to-b from-[#0b2447] via-[#12395e] to-[#19456b] text-white shadow-2xl p-6 flex flex-col sticky top-0 h-screen">
+    <a href="index.html" class="flex items-center gap-3 mb-10 pb-6 border-b border-white/10">
       <img src="pic/logo.png" alt="DXPRO SOLUTIONS" class="object-contain drop-shadow-lg">
     </a>
-    <ul class="flex-1 space-y-3">
+    <ul class="flex-1 space-y-1.5">
       <li>
-        <a href="index.html" class="flex items-center gap-3 py-3 px-4 rounded-lg bg-blue text-white-800 transition">
-          <i class="fas fa-home"></i> 採用ホーム
+        <a href="index.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl bg-white/10 text-white font-medium shadow-inner transition-all">
+          <i class="fas fa-home w-5 text-center text-blue-300"></i> 採用ホーム
         </a>
       </li>
       <li>
-        <a href="new.html" class="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-blue-700 transition">
-          <i class="fas fa-graduation-cap"></i> 新卒採用
+        <a href="new.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-graduation-cap w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> 新卒採用
         </a>
       </li>
       <li>
-        <a href="career.html" class="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-blue-700 transition">
-          <i class="fas fa-briefcase"></i> 中途採用
+        <a href="career.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-briefcase w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> 中途採用
         </a>
       </li>
       <li>
-        <a href="recruit.html" class="flex items-center gap-3 py-3 px-4 rounded-lg bg-blue-700 transition">
-          <i class="fas fa-list-alt"></i> 募集情報
+        <a href="recruit.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-list-alt w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> 募集情報
         </a>
       </li>
       <li>
-        <a href="benefit.html" class="flex items-center gap-3 py-3 px-4 rounded-lg bg-blue-700 transition">
-          <i class="fas fa-heart"></i> 福利厚生
+        <a href="benefit.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-heart w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> 福利厚生
         </a>
       </li>
       <li>
-        <a href="application-status.html" class="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-blue-700 transition">
-          <i class="fas fa-clipboard-check"></i> 応募状況確認
+        <a href="application-status.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-clipboard-check w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> 応募状況確認
         </a>
       </li>
       <li>
-        <a href="settings.html" class="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-blue-700 transition">
-          <i class="fas fa-user-cog"></i> アカウント設定
+        <a href="settings.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-user-cog w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> アカウント設定
         </a>
       </li>
-      <li><a href="contact.html" class="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-blue-700 transition">
-          <i class="fas fa-question-circle"></i> お問い合わせ</a>
+      <li><a href="contact.html" class="group flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 hover:translate-x-1 transition-all duration-200">
+          <i class="fas fa-question-circle w-5 text-center text-blue-300/80 group-hover:text-blue-300"></i> お問い合わせ</a>
       </li>
     </ul>
 
-    <div class="pt-4 border-t border-blue-500" id="authLinkContainer">
-      <a href="/logout" id="authLink" class="flex items-center gap-3 py-2 px-4 rounded-lg hover:bg-red-700 transition">
-        <i class="fas fa-sign-out-alt" id="authIcon"></i>
+    <div class="pt-4 border-t border-white/10" id="authLinkContainer">
+      <a href="/logout" id="authLink" class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-white/70 hover:text-white hover:bg-red-600/80 transition-all duration-200">
+        <i class="fas fa-sign-out-alt w-5 text-center" id="authIcon"></i>
         <span id="authText">ログアウト</span>
       </a>
     </div>
   </nav>
 
   <!-- メインコンテンツ -->
-  <main class="flex-1 p-1 space-y-3 overflow-y-auto">
+  <main class="flex-1 p-6 space-y-8 overflow-y-auto">
 
     <!-- スライドショー -->
-    <section class="relative w-full h-[710px] overflow-hidden rounded-xl shadow-xl p-0 m-0">
-      <div class="absolute inset-0 bg-black/30 z-10"></div>
+    <section class="relative w-full h-[640px] overflow-hidden rounded-2xl shadow-2xl">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10 z-10"></div>
       <div id="slider" class="w-full h-full relative m-0 p-0">
       </div>
       <div class="absolute inset-0 flex items-center justify-center z-20 text-white px-8">
         <div class="text-center max-w-6xl">
-          <h2 id="slideText" class="text-5xl md:text-6xl font-bold mb-6 drop-shadow-2xl animate-fadeIn">
+          <span class="inline-block mb-5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm tracking-wide">
+            DXPROSOLUTIONS RECRUITING
+          </span>
+          <h2 id="slideText" class="text-5xl md:text-6xl font-bold mb-6 drop-shadow-2xl animate-fadeIn tracking-tight">
             未来を共に創る人材を募集します
           </h2>
-          <p class="text-xl mb-8">DXPRO SOLUTIONSと一緒に、あなたの可能性を広げていきましょう。</p>
-          <a href="recruit.html" class="bg-white text-blue-800 font-bold px-8 py-3 rounded-md hover:bg-blue-100 transition inline-block">募集情報を見る</a>
+          <p class="text-lg md:text-xl mb-9 text-white/90 font-light">DXPRO SOLUTIONSと一緒に、あなたの可能性を広げていきましょう。</p>
+          <a href="recruit.html" class="bg-white text-blue-900 font-bold px-9 py-3.5 rounded-full hover:bg-blue-50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 inline-flex items-center gap-2">
+            募集情報を見る <i class="fas fa-arrow-right text-sm"></i>
+          </a>
         </div>
       </div>
     </section>
 
     <!-- 採用プロセス -->
-    <section class="bg-white p-8 rounded-xl shadow-md">
-      <h2 class="text-2xl font-bold mb-6 border-b pb-3">採用プロセス</h2>
+    <section class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="w-1.5 h-7 bg-blue-700 rounded-full"></span>
+        <h2 class="text-2xl font-bold text-gray-900">採用プロセス</h2>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="text-center p-6 bg-blue-50 rounded-lg">
-          <div class="w-16 h-16 bg-blue-700 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
-          <h3 class="font-bold mb-2">書類選考</h3>
-          <p class="text-sm text-gray-600">オンラインにて入社申込</p>
+        <div class="relative text-center p-7 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-blue-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-md shadow-blue-200">1</div>
+          <h3 class="font-bold mb-2 text-gray-900">書類選考</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">オンラインにて入社申込</p>
         </div>
-        <div class="text-center p-6 bg-blue-50 rounded-lg">
-          <div class="w-16 h-16 bg-blue-700 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">２</div>
-          <h3 class="font-bold mb-2">面接</h3>
-          <p class="text-sm text-gray-600">1～2回の面接を実施します</p>
+        <div class="relative text-center p-7 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-blue-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-md shadow-blue-200">2</div>
+          <h3 class="font-bold mb-2 text-gray-900">面接</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">1～2回の面接を実施します</p>
         </div>
-        <div class="text-center p-6 bg-blue-50 rounded-lg">
-          <div class="w-16 h-16 bg-blue-700 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
-          <h3 class="font-bold mb-2">内定</h3>
-          <p class="text-sm text-gray-600">スキルに合わせた仕事を探します</p>
+        <div class="relative text-center p-7 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-blue-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-md shadow-blue-200">3</div>
+          <h3 class="font-bold mb-2 text-gray-900">内定</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">スキルに合わせた仕事を探します</p>
         </div>
-        <div class="text-center p-6 bg-blue-50 rounded-lg">
-          <div class="w-16 h-16 bg-blue-700 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">4</div>
-          <h3 class="font-bold mb-2">入社</h3>
-          <p class="text-sm text-gray-600">共に働ける事を期待してます</p>
+        <div class="relative text-center p-7 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-blue-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-md shadow-blue-200">4</div>
+          <h3 class="font-bold mb-2 text-gray-900">入社</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">共に働ける事を期待してます</p>
         </div>
       </div>
     </section>
 
     <!-- 募集ポジション -->
-    <section class="bg-white p-8 rounded-xl shadow-md">
-      <div class="flex justify-between items-center mb-6 border-b pb-3">
-        <h2 class="text-2xl font-bold">募集ポジション</h2>
+    <section class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center gap-3">
+          <span class="w-1.5 h-7 bg-blue-700 rounded-full"></span>
+          <h2 class="text-2xl font-bold text-gray-900">募集ポジション</h2>
+        </div>
       <a href="recruit.html" 
-        class="bg-white text-blue-800 font-bold px-8 py-3 rounded-md hover:bg-blue-100 transition inline-block">
-        すべて見る
+        class="text-blue-700 font-semibold px-5 py-2.5 rounded-full border border-blue-200 hover:bg-blue-50 transition-colors inline-flex items-center gap-1.5">
+        すべて見る <i class="fas fa-chevron-right text-xs"></i>
       </a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="border rounded-lg p-6 hover:shadow-md transition">
-          <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">新卒</span>
-          <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">中途</span>
-          <h3 class="text-xl font-bold mt-3 mb-2">ソフトウェアエンジニア</h3>
-          <p class="text-gray-600 mb-4">クラウドベースのソフトウェア開発および保守</p>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">東京</span>
-            <a href="/position-detail.html" class="text-blue-700 font-medium hover:underline">詳細を見る</a>
+        <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
+          <div class="flex gap-2">
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">新卒</span>
+            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">中途</span>
+          </div>
+          <h3 class="text-xl font-bold mt-4 mb-2 text-gray-900">ソフトウェアエンジニア</h3>
+          <p class="text-gray-500 mb-5 leading-relaxed">クラウドベースのソフトウェア開発および保守</p>
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1 text-blue-600"></i>東京</span>
+            <a href="/position-detail.html" class="text-blue-700 font-semibold hover:underline inline-flex items-center gap-1">詳細を見る <i class="fas fa-arrow-right text-xs"></i></a>
           </div>
         </div>
-        <div class="border rounded-lg p-6 hover:shadow-md transition">
-          <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">中途</span>
-          <h3 class="text-xl font-bold mt-3 mb-2">データサイエンティスト</h3>
-          <p class="text-gray-600 mb-4">ビッグデータ分析およびAIモデル開発</p>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">東京 · 経験5年以上</span>
-            <a href="/position-detail2.html" class="text-blue-700 font-medium hover:underline">詳細を見る</a>
+        <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
+          <div class="flex gap-2">
+            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">中途</span>
+          </div>
+          <h3 class="text-xl font-bold mt-4 mb-2 text-gray-900">データサイエンティスト</h3>
+          <p class="text-gray-500 mb-5 leading-relaxed">ビッグデータ分析およびAIモデル開発</p>
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1 text-blue-600"></i>東京 · 経験5年以上</span>
+            <a href="/position-detail2.html" class="text-blue-700 font-semibold hover:underline inline-flex items-center gap-1">詳細を見る <i class="fas fa-arrow-right text-xs"></i></a>
           </div>
         </div>
-        <div class="border rounded-lg p-6 hover:shadow-md transition">
-          <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">中途</span>
-          <h3 class="text-xl font-bold mt-3 mb-2">UI/UXデザイナー</h3>
-          <p class="text-gray-600 mb-4">ユーザー体験中心の設計およびプロトタイプ作成</p>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">東京 · 経験3年以上</span>
-            <a href="/position-detail3.html" class="text-blue-700 font-medium hover:underline">詳細を見る</a>
+        <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
+          <div class="flex gap-2">
+            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">中途</span>
+          </div>
+          <h3 class="text-xl font-bold mt-4 mb-2 text-gray-900">UI/UXデザイナー</h3>
+          <p class="text-gray-500 mb-5 leading-relaxed">ユーザー体験中心の設計およびプロトタイプ作成</p>
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1 text-blue-600"></i>東京 · 経験3年以上</span>
+            <a href="/position-detail3.html" class="text-blue-700 font-semibold hover:underline inline-flex items-center gap-1">詳細を見る <i class="fas fa-arrow-right text-xs"></i></a>
           </div>
         </div>
-        <div class="border rounded-lg p-6 hover:shadow-md transition">
-          <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">中途</span>
-          <h3 class="text-xl font-bold mt-3 mb-2">プロジェクトマネージャー</h3>
-          <p class="text-gray-600 mb-4">ITプロジェクトの企画およびスケジュール管理</p>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">東京 · 経験10年以上</span>
-            <a href="/position-detail4.html" class="text-blue-700 font-medium hover:underline">詳細を見る</a>
+        <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
+          <div class="flex gap-2">
+            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">中途</span>
+          </div>
+          <h3 class="text-xl font-bold mt-4 mb-2 text-gray-900">プロジェクトマネージャー</h3>
+          <p class="text-gray-500 mb-5 leading-relaxed">ITプロジェクトの企画およびスケジュール管理</p>
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1 text-blue-600"></i>東京 · 経験10年以上</span>
+            <a href="/position-detail4.html" class="text-blue-700 font-semibold hover:underline inline-flex items-center gap-1">詳細を見る <i class="fas fa-arrow-right text-xs"></i></a>
           </div>
         </div>
       </div>
     </section>
 
     <!-- 企業文化 -->
-    <section class="bg-white p-8 rounded-xl shadow-md">
-      <h2 class="text-2xl font-bold mb-6 border-b pb-3">DXPRO SOLUTIONSの文化</h2>
+    <section class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="w-1.5 h-7 bg-blue-700 rounded-full"></span>
+        <h2 class="text-2xl font-bold text-gray-900">DXPRO SOLUTIONSの文化</h2>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="text-center p-6">
-          <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-users text-3xl text-blue-700"></i>
+        <div class="text-center p-7 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+          <div class="w-18 h-18 w-[72px] h-[72px] bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+            <i class="fas fa-users text-2xl text-blue-700"></i>
           </div>
-          <h3 class="font-bold text-lg mb-2">協力とコミュニケーション</h3>
-          <p class="text-gray-600">フラットな組織文化で自由な意思疎通と協力を目指します。</p>
+          <h3 class="font-bold text-lg mb-2 text-gray-900">協力とコミュニケーション</h3>
+          <p class="text-gray-500 leading-relaxed">フラットな組織文化で自由な意思疎通と協力を目指します。</p>
         </div>
-        <div class="text-center p-6">
-          <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-lightbulb text-3xl text-green-700"></i>
+        <div class="text-center p-7 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+          <div class="w-[72px] h-[72px] bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+            <i class="fas fa-lightbulb text-2xl text-green-700"></i>
           </div>
-          <h3 class="font-bold text-lg mb-2">革新と挑戦</h3>
-          <p class="text-gray-600">新しいアイデアと挑戦精神を奨励し、革新を主導します。</p>
+          <h3 class="font-bold text-lg mb-2 text-gray-900">革新と挑戦</h3>
+          <p class="text-gray-500 leading-relaxed">新しいアイデアと挑戦精神を奨励し、革新を主導します。</p>
         </div>
-        <div class="text-center p-6">
-          <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-heart text-3xl text-purple-700"></i>
+        <div class="text-center p-7 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+          <div class="w-[72px] h-[72px] bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+            <i class="fas fa-heart text-2xl text-purple-700"></i>
           </div>
-          <h3 class="font-bold text-lg mb-2">ワークライフバランス</h3>
-          <p class="text-gray-600">フレックスタイム制と在宅勤務で仕事と生活のバランスをサポートします。</p>
+          <h3 class="font-bold text-lg mb-2 text-gray-900">ワークライフバランス</h3>
+          <p class="text-gray-500 leading-relaxed">フレックスタイム制と在宅勤務で仕事と生活のバランスをサポートします。</p>
         </div>
       </div>
     </section>
 
     <!-- フッター -->
-        <p class="text-center p-6">© 2024 DXPRO SOLUTIONS. All rights reserved.</p>
+    <p class="text-center text-sm text-gray-400 py-6">© 2024 DXPRO SOLUTIONS. All rights reserved.</p>
   </main>
 </div>
 

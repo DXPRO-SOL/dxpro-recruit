@@ -473,7 +473,7 @@ app.post('/api/forgot-password', async (req, res) => {
     // メール送信（テストモードの場合はスキップ）
     if (process.env.NODE_ENV !== 'test') {
     await transporter.sendMail({
-      from: '"DXPROサポート" <info@dxpro-sol.com>',
+      from: '"DXPRO SOLUTIONSサポート" <info@dxpro-sol.com>',
       to: email,
       subject: 'パスワードリセットのご案内',
       html: `

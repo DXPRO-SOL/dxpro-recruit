@@ -4,40 +4,45 @@
   <meta charset="UTF-8">
   <title>設定 | DXPRO SOLUTIONS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center pt-10 space-y-8">
+<body class="bg-gray-50 text-gray-800 font-['Noto_Sans_JP'] min-h-screen flex flex-col items-center pt-12 pb-12 px-4 space-y-6">
 
   <!-- 基本情報 -->
-  <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-3xl">
-    <h1 class="text-3xl font-bold mb-6">アカウント設定</h1>
+  <div class="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 w-full max-w-3xl">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="w-1.5 h-7 bg-blue-700 rounded-full"></span>
+      <h1 class="text-2xl font-bold text-gray-900">アカウント設定</h1>
+    </div>
 
-    <div id="alertBox" class="hidden mb-4 p-3 rounded-lg text-white font-medium"></div>
+    <div id="alertBox" class="hidden mb-5 p-3.5 rounded-xl text-white font-medium text-sm"></div>
 
-    <form id="settingsForm" class="space-y-4">
+    <form id="settingsForm" class="space-y-5">
       <div>
-        <label class="block mb-1">ログインID</label>
-        <input type="text" name="username" class="w-full border rounded px-3 py-2" required>
+        <label class="block mb-1.5 text-sm font-medium text-gray-600">ログインID</label>
+        <input type="text" name="username" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition" required>
       </div>
 
       <div>
-        <label class="block mb-1">メールアドレス</label>
-        <input type="email" name="email" class="w-full border rounded px-3 py-2" required>
+        <label class="block mb-1.5 text-sm font-medium text-gray-600">メールアドレス</label>
+        <input type="email" name="email" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition" required>
       </div>
 
       <div>
-        <label class="block mb-1">電話番号</label>
-        <input type="tel" name="phone" class="w-full border rounded px-3 py-2" required>
+        <label class="block mb-1.5 text-sm font-medium text-gray-600">電話番号</label>
+        <input type="tel" name="phone" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition" required>
       </div>
 
       <div>
-        <label class="block mb-1">パスワード変更</label>
-        <input type="password" name="password" class="w-full border rounded px-3 py-2" placeholder="新しいパスワード">
-        <input type="password" name="passwordConfirm" class="w-full border rounded px-3 py-2 mt-2" placeholder="確認用パスワード">
-        <p class="text-sm text-gray-500 mt-1">変更する場合のみ入力してください</p>
+        <label class="block mb-1.5 text-sm font-medium text-gray-600">パスワード変更</label>
+        <input type="password" name="password" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition" placeholder="新しいパスワード">
+        <input type="password" name="passwordConfirm" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition" placeholder="確認用パスワード">
+        <p class="text-xs text-gray-400 mt-1.5">変更する場合のみ入力してください</p>
       </div>
 
-      <div class="w-full max-w-3xl mt-4">
-        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition">
+      <div class="w-full max-w-3xl pt-2">
+        <button type="submit" class="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 hover:shadow-md transition-all">
           保存
         </button>
       </div>      
@@ -45,54 +50,58 @@
   </div>
 
   <!-- 応募設定 -->
-  <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-3xl">
-    <h1 class="text-3xl font-bold mb-6">応募設定</h1>
+  <div class="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 w-full max-w-3xl">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="w-1.5 h-7 bg-blue-700 rounded-full"></span>
+      <h1 class="text-2xl font-bold text-gray-900">応募設定</h1>
+    </div>
     
-    <form id="applyForm" class="space-y-4">
+    <form id="applyForm" class="space-y-5">
       <div>
-        <span class="block mb-1">応募区分</span>
-        <label class="inline-flex items-center mr-4">
-          <input type="radio" name="employmentType" value="newGrad" class="text-green-600">
+        <span class="block mb-2 text-sm font-medium text-gray-600">応募区分</span>
+        <label class="inline-flex items-center mr-6">
+          <input type="radio" name="employmentType" value="newGrad" class="text-blue-600 focus:ring-blue-400">
           <span class="ml-2">新卒</span>
         </label>
         <label class="inline-flex items-center">
-          <input type="radio" name="employmentType" value="midCareer" class="text-green-600">
+          <input type="radio" name="employmentType" value="midCareer" class="text-blue-600 focus:ring-blue-400">
           <span class="ml-2">中途</span>
         </label>
       </div>
 
       <!-- 新卒 -->
-      <div id="newGradFields" class="hidden">
-        <input type="text" name="graduationSchool" placeholder="卒業予定学校名" class="w-full border rounded px-3 py-2 mt-2">
-        <input type="month" name="expectedGraduation" placeholder="卒業予定年月" class="w-full border rounded px-3 py-2 mt-2">
+      <div id="newGradFields" class="hidden space-y-2">
+        <input type="text" name="graduationSchool" placeholder="卒業予定学校名" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition">
+        <input type="month" name="expectedGraduation" placeholder="卒業予定年月" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition">
       </div>
 
       <!-- 中途 -->
       <div id="midCareerFields" class="hidden">
         <label class="flex items-center space-x-2 mt-2">
-          <input type="checkbox" name="hasCurrentJob" id="hasCurrentJob" class="text-green-600">
+          <input type="checkbox" name="hasCurrentJob" id="hasCurrentJob" class="text-blue-600 focus:ring-blue-400">
           <span>現職がある</span>
         </label>
-        <div id="currentJobFields" class="hidden">
-          <span>退職予定日</span>
-          <input type="date" name="expectedResignation" class="w-full border rounded px-3 py-2 mt-2">
-          <span>入社希望日</span>
-          <input type="date" name="desiredJoinDate" class="w-full border rounded px-3 py-2 mt-2">
+        <div id="currentJobFields" class="hidden space-y-2 mt-2">
+          <span class="block text-sm font-medium text-gray-600">退職予定日</span>
+          <input type="date" name="expectedResignation" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition">
+          <span class="block text-sm font-medium text-gray-600">入社希望日</span>
+          <input type="date" name="desiredJoinDate" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition">
         </div>
       </div>
         <!-- ホーム戻る -->
-      <div class="w-full max-w-3xl">
+      <div class="w-full max-w-3xl pt-2 space-y-3">
 
-          <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition">
+          <button type="submit" class="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 hover:shadow-md transition-all">
             保存
-          </button><br><br>
+          </button>
         <a href="/index.html"
-          class="block text-center bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition shadow-md">
-          ホームに戻る
+          class="block text-center border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition">
+          <i class="fas fa-arrow-left mr-1.5 text-xs"></i>ホームに戻る
         </a>
       </div>
     </form>
   </div>
+
 
 
 <script>

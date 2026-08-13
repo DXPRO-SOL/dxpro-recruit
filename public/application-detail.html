@@ -5,32 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>応募詳細 - DXPRO SOLUTIONS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-sans min-h-screen">
+<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen p-6">
 
-  <div class="max-w-6xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">応募詳細</h1>
-      <a href="/application-status.html" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-200">
-        応募履歴へ戻る
+  <div class="max-w-5xl mx-auto mt-6 p-8 bg-white rounded-2xl border border-gray-100">
+    <div class="flex justify-between items-center mb-8">
+      <div class="flex items-center gap-3">
+        <span class="w-1.5 h-8 bg-blue-700 rounded-full"></span>
+        <h1 class="text-2xl font-bold text-gray-900">応募詳細</h1>
+      </div>
+      <a href="/application-status.html" class="border border-gray-200 hover:bg-gray-50 text-gray-600 font-semibold py-2.5 px-5 rounded-xl transition duration-200 inline-flex items-center gap-1.5">
+        <i class="fas fa-arrow-left text-xs"></i>応募履歴へ戻る
       </a>
     </div>
 
-    <div id="applicationDetail" class="space-y-4 text-gray-700 text-lg">
+    <div id="applicationDetail" class="space-y-5 text-gray-700">
       <!-- 動的に応募情報をここに表示 -->
-      <p><strong>日付:</strong> <span id="appDate">読み込み中...</span></p>
-      <p><strong>応募タイプ:</strong> <span id="appType">読み込み中...</span></p>
-      <p><strong>名前:</strong> <span id="appName">読み込み中...</span></p>
-      <p><strong>メール:</strong> <span id="appEmail">読み込み中...</span></p>
-      <p><strong>応募ポジション:</strong> <span id="appPosition">読み込み中...</span></p>
-      <p><strong>ステータス:</strong> <span id="appStatus" class="inline-block py-1 px-3 rounded-full text-sm font-semibold shadow-sm bg-gray-100 text-gray-800">読み込み中</span></p>
-      <p><strong>自己PR:</strong></p>
-      <div id="appPR" class="p-4 bg-gray-50 rounded-lg border border-gray-200 break-words whitespace-pre-wrap">長い文章でも折り返されます...</div>
-      <p><strong>志望動機:</strong></p>
-      <div id="appMotivation" class="p-4 bg-gray-50 rounded-lg border border-gray-200 break-words whitespace-pre-wrap">ここも同様です...</div>      <p><strong>人事担当者からの連絡:</strong></p>
-      <div id="appHRComment" class="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">読み込み中...</div>
+      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">日付</strong> <span id="appDate">読み込み中...</span></p>
+      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">応募タイプ</strong> <span id="appType">読み込み中...</span></p>
+      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">名前</strong> <span id="appName">読み込み中...</span></p>
+      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">メール</strong> <span id="appEmail">読み込み中...</span></p>
+      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">応募ポジション</strong> <span id="appPosition">読み込み中...</span></p>
+      <p class="flex flex-wrap gap-2 items-center"><strong class="text-gray-500 font-medium w-32 shrink-0">ステータス</strong> <span id="appStatus" class="inline-block py-1 px-3 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">読み込み中</span></p>
+      <div class="pt-2">
+        <p class="text-gray-500 font-medium mb-2">自己PR</p>
+        <div id="appPR" class="p-4 bg-gray-50 rounded-xl border border-gray-100 break-words whitespace-pre-wrap text-gray-700">長い文章でも折り返されます...</div>
+      </div>
+      <div>
+        <p class="text-gray-500 font-medium mb-2">志望動機</p>
+        <div id="appMotivation" class="p-4 bg-gray-50 rounded-xl border border-gray-100 break-words whitespace-pre-wrap text-gray-700">ここも同様です...</div>
+      </div>
+      <div>
+        <p class="text-gray-500 font-medium mb-2">人事担当者からの連絡</p>
+        <div id="appHRComment" class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">読み込み中...</div>
+      </div>
     </div>
   </div>
+
 
   <script>
     const positionMap = {
