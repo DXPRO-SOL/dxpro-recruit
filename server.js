@@ -369,6 +369,7 @@ app.post("/apply/newgrad", upload.fields([
       userId: req.session.userId || null,
       ...req.body,
       consent: req.body.consent === "on",
+      noAddress: req.body.noAddress === "on" || req.body.noAddress === "true" || req.body.noAddress === true,
       resume: files.resume?.[0]?.path || "",
       portfolioFiles: files.portfolioFiles?.map(f => f.path) || []
     };
@@ -398,6 +399,7 @@ app.post("/apply/career", upload.fields([
       userId: req.session.userId || null,
       ...req.body,
       consent: req.body.consent === "on",
+      noAddress: req.body.noAddress === "on" || req.body.noAddress === "true" || req.body.noAddress === true,
       resume: files.resume?.[0]?.path || "",
       career: files.career?.[0]?.path || "",
       portfolioFiles: files.portfolioFiles?.map(f=>f.path) || []
