@@ -14,6 +14,16 @@
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-['Noto_Sans_JP']">
+  <!-- モバイル用トップバー -->
+  <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white flex items-center justify-between px-4 py-3 shadow-lg">
+    <a href="index.html" class="flex items-center gap-2">
+      <img src="pic/logo.png" alt="DXPRO SOLUTIONS" class="h-8 object-contain">
+    </a>
+    <button id="sidebarToggle" class="text-white text-2xl p-2 leading-none">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
     <!-- 모달 창 -->
   <div id="applicationModal" class="fixed inset-0 w-full h-full bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal" style="display: none;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -47,7 +57,7 @@
   </div>
   <div class="flex min-h-screen relative">
     <!-- 左サイドバー -->
-    <nav class="w-64 bg-gradient-to-b from-[#0b2447] via-[#12395e] to-[#19456b] text-white shadow-2xl p-6 flex flex-col sticky top-0 h-screen">
+    <nav id="mainSidebar" class="w-64 bg-gradient-to-b from-[#0b2447] via-[#12395e] to-[#19456b] text-white shadow-2xl p-6 flex flex-col fixed md:sticky top-0 left-0 h-screen z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
       <a href="index.html" class="flex items-center gap-3 mb-10 pb-6 border-b border-white/10">
         <img src="pic/logo.png" alt="DXPRO SOLUTIONS" class="object-contain drop-shadow-lg">
       </a>
@@ -68,7 +78,7 @@
 
 
     <!-- メインコンテンツ -->
-    <main class="flex-1 p-8 overflow-y-auto">
+    <main class="flex-1 p-8 pt-24 md:pt-8 overflow-y-auto">
       <a href="recruit.html" class="inline-flex items-center text-blue-700 mb-4 hover:underline">
         <i class="fas fa-arrow-left mr-2"></i> 募集一覧に戻る
       </a>
@@ -194,6 +204,19 @@
         closeModal();
       }
     }
+
+    (function(){
+      const btn = document.getElementById('sidebarToggle');
+      const sidebar = document.getElementById('mainSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if(!btn || !sidebar || !overlay) return;
+      function openSidebar(){ sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); }
+      function closeSidebar(){ sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
+      btn.addEventListener('click', () => {
+        sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
+      });
+      overlay.addEventListener('click', closeSidebar);
+    })();
   </script>
 </body>
 </html>

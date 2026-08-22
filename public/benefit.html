@@ -1,541 +1,172 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福利厚生のご案内</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* リセットCSS */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-        }
-        
-        body {
-            background-color: #f8f9fa;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        /* ヘッダー */
-        header {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
-            color: white;
-            padding: 4rem 0 3rem;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.03)"/></svg>');
-            background-size: cover;
-        }
-        
-        .header-title {
-            font-size: 2.8rem;
-            margin-bottom: 0.8rem;
-            font-weight: 700;
-            position: relative;
-            letter-spacing: 0.05em;
-        }
-        
-        .header-subtitle {
-            font-size: 1.3rem;
-            opacity: 0.9;
-            font-weight: 300;
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-        }
-        
-        /* ナビゲーション */
-        .nav-container {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .nav-item {
-            padding: 1rem 1.5rem;
-            color: #2c3e50;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .nav-item:hover {
-            color: #3498db;
-        }
-        
-        .nav-item::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background: #3498db;
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-        
-        .nav-item:hover::after {
-            width: 80%;
-        }
-        
-        /* メインコンテンツ */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        
-        /* イントロダクション */
-        .intro {
-            text-align: center;
-            margin-bottom: 4rem;
-            padding: 3rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .intro::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12, #9b59b6, #1abc9c);
-        }
-        
-        .intro h2 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-size: 2.2rem;
-            font-weight: 600;
-        }
-        
-        .intro p {
-            max-width: 800px;
-            margin: 0 auto;
-            color: #555;
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        
-        /* 福利厚生カード */
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 4rem;
-        }
-        
-        .benefit-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            transition: all 0.4s ease;
-            position: relative;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .benefit-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-        }
-        
-        .benefit-icon {
-            color: white;
-            font-size: 2.5rem;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .benefit-icon::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            bottom: -50%;
-            left: -50%;
-            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
-            transform: rotate(30deg);
-        }
-        
-        .benefit-content {
-            padding: 2rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .benefit-content h3 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .benefit-content p {
-            color: #555;
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-            text-align: center;
-        }
-        
-        .benefit-list {
-            list-style-type: none;
-            margin-top: auto;
-            text-align: center; /* リスト全体を中央揃え */
-            padding-left: 0; /* デフォルトのパディングを削除 */
-        }
-        
-        .benefit-list li {
-            padding: 0.5rem 0;
-            position: relative;
-            border-bottom: 1px dashed #f0f0f0;
-            text-align: center; /* テキストを中央揃え */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .benefit-list li:last-child {
-            border-bottom: none;
-        }
-        
-        .benefit-list li:before {
-            content: "✓";
-            color: #27ae60;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-right: 0.5rem;
-            position: static; /* 絶対位置指定を解除 */
-        }
-        
-        /* カラーバリエーション */
-        .color-1 .benefit-icon { background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%); }
-        .color-2 .benefit-icon { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
-        .color-3 .benefit-icon { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
-        .color-4 .benefit-icon { background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); }
-        .color-5 .benefit-icon { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
-        .color-6 .benefit-icon { background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); }
-        
-        /* 統計セクション */
-        .stats-section {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
-            color: white;
-            padding: 4rem 2rem;
-            margin: 4rem 0;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        .stat-item {
-            padding: 1.5rem;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #3498db;
-        }
-        
-        .stat-label {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        /* CTAセクション */
-        .cta-section {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            margin-bottom: 4rem;
-        }
-        
-        .cta-title {
-            font-size: 2.2rem;
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            padding: 1rem 2.5rem;
-            background: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        }
-        
-        .cta-button:hover {
-            background: #2980b9;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-        
-        /* フッター */
-        footer {
-            background: #2c3e50;
-            color: white;
-            padding: 3rem 2rem;
-            margin-top: 4rem;
-        }
-        
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
-        
-        .footer-section h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1.5rem;
-            position: relative;
-            padding-bottom: 0.5rem;
-        }
-        
-        .footer-section h3::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 2px;
-            background: #3498db;
-        }
-        
-        .footer-links {
-            list-style: none;
-        }
-        
-        .footer-links li {
-            margin-bottom: 0.8rem;
-        }
-        
-        .footer-links a {
-            color: #ddd;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: #3498db;
-        }
-        
-        .footer-bottom {
-            text-align: center;
-            padding-top: 2rem;
-            margin-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .footer-text {
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-        
-        /* レスポンシブ対応 */
-        @media (max-width: 768px) {
-            .benefits-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-title {
-                font-size: 2.2rem;
-            }
-            
-            .nav-inner {
-                flex-wrap: wrap;
-            }
-            
-            .nav-item {
-                padding: 0.8rem 1rem;
-            }
-            
-            .intro {
-                padding: 2rem 1.5rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>福利厚生のご案内 - DXPRO SOLUTIONS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <h1 class="header-title">従業員の皆様を大切に</h1>
-        <p class="header-subtitle">充実した福利厚生でワークライフバランスをサポート</p>
-    </header>
-    
-    <div class="nav-container">
-        <div class="nav-inner">
-            <a href="/index.html" class="nav-item">ホーム</a>
-            <a href="/benefit.html" class="nav-item">福利厚生</a>
-            <a href="/recruit.html" class="nav-item">採用情報</a>
-            <a href="/new.html" class="nav-item">新卒採用</a>
-            <a href="/career.html" class="nav-item">中途採用</a>
-            <a href="/contact.html" class="nav-item">お問い合わせ</a>
-        </div>
+<body class="bg-gray-50 text-gray-800 font-['Noto_Sans_JP']">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-b from-[#0b2447] via-[#12395e] to-[#19456b] text-white py-16 md:py-20 text-center relative overflow-hidden">
+    <div class="relative max-w-3xl mx-auto px-6">
+      <span class="inline-block mb-5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm tracking-wide">
+        DXPRO SOLUTIONS BENEFITS
+      </span>
+      <h1 class="text-3xl md:text-4xl font-bold mb-4 tracking-tight">従業員の皆様を大切に</h1>
+      <p class="text-base md:text-lg text-white/85 font-light">充実した福利厚生でワークライフバランスをサポート</p>
     </div>
-    
-    <div class="container">
-        <section class="intro">
-            <h2>働きやすい環境づくりを目指して</h2>
-            <p>当社では、従業員の皆様が仕事と生活の調和を図りながら、いきいきと活躍できる環境づくりに取り組んでいます。中小企業の枠を超えた充実の福利厚生をご用意しました。</p>
-        </section>
-        
-        <div class="benefits-grid">
-            <!-- 福利厚生カード1 -->
-            <div class="benefit-card color-1">
-                <div class="benefit-icon"><i class="fas fa-hospital"></i></div>
-                <div class="benefit-content">
-                    <h3>健康・医療サポート</h3>
-                    <p>従業員の健康維持を全面的にサポートします</p>
-                    <ul class="benefit-list">
-                        <li>年１回健康診断補助</li>
-                        <li>社会保険加入</li>
-                        <li>ストレスチェック制度</li>
-                        <li>1on1制度実施</li>
-                        <li>月１回職務満足度相談実施</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 福利厚生カード2 -->
-            <div class="benefit-card color-2">
-                <div class="benefit-icon"><i class="fas fa-heart"></i></div>
-                <div class="benefit-content">
-                    <h3>休暇・休業制度</h3>
-                    <p>ライフイベントに合わせた柔軟な休暇制度</p>
-                    <ul class="benefit-list">
-                        <li>年次有給休暇</li>
-                        <li>リフレッシュ休暇<br>（3年・5年継続ごとに付与）</li>
-                        <li>慶弔休暇</li>
-                        <li>育児・介護休業制度</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 福利厚生カード3 -->
-            <div class="benefit-card color-3">
-                <div class="benefit-icon"><i class="fas fa-yen-sign"></i></div>
-                <div class="benefit-content">
-                    <h3>経済的支援</h3>
-                    <p>経済的な負担を軽減する各種制度</p>
-                    <ul class="benefit-list">
-                        <li>家賃補助制度</li>
-                        <li>資格取得支援制度</li>
-                        <li>DB/CB制度支援</li>
-                        <li>書籍購入補助</li>
-                        <br>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 福利厚生カード4 -->
-            <div class="benefit-card color-4">
-                <div class="benefit-icon"><i class="fas fa-utensils"></i></div>
-                <div class="benefit-content">
-                    <h3>日常的な福利厚生</h3>
-                    <p>日々の仕事を快適にするサポート</p>
-                    <ul class="benefit-list">
-                        <li>交通費全額支給</li>
-                        <li>社内部活支援</li>
-                        <li>社員割引<br>（自社サービス利用時：NOKORI）</li>
-                        <li>社内イベント支援<br>（バーベキュー/旅行）</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 福利厚生カード5 -->
-            <div class="benefit-card color-5">
-                <div class="benefit-icon"><i class="fas fa-home"></i></div>
-                <div class="benefit-content">
-                    <h3>ワークライフバランス</h3>
-                    <p>柔軟な働き方を実現する制度</p>
-                    <ul class="benefit-list">
-                        <li>フレックスタイム制</li>
-                        <li>リモートワーク制度</li>
-                        <li>短時間勤務制度（要相談）</li>
-                        <li>時間単位年休制度</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 福利厚生カード6 -->
-            <div class="benefit-card color-6">
-                <div class="benefit-icon"><i class="fas fa-graduation-cap"></i></div>
-                <div class="benefit-content">
-                    <h3>自己啓発支援</h3>
-                    <p>キャリアアップを全面的にバックアップ</p>
-                    <ul class="benefit-list">
-                        <li>教育訓練費用の補助</li>
-                        <li>eラーニング教材の提供</li>
-                        <li>キャリアコンサルティング</li>
-                        <li>外部セミナー参加支援</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <br>
-        <!-- CTAセクション -->
-        <div class="cta-section">
-            <h2 class="cta-title">私たちと一緒に働きませんか？</h2>
-            <p>充実した福利厚生と働きやすい環境で、あなたのキャリアをサポートします。</p><br>
-            <a href="/recruit.html" class="cta-button">採用情報を見る</a>
-        </div>
+  </header>
+
+  <!-- ナビゲーション -->
+  <nav class="bg-white shadow-sm sticky top-0 z-30 border-b border-gray-100">
+    <div class="max-w-5xl mx-auto flex flex-wrap justify-center">
+      <a href="/index.html" class="px-6 py-4 text-gray-600 hover:text-blue-700 font-medium transition-colors">ホーム</a>
+      <a href="/benefit.html" class="px-6 py-4 text-blue-700 font-semibold border-b-2 border-blue-700">福利厚生</a>
+      <a href="/recruit.html" class="px-6 py-4 text-gray-600 hover:text-blue-700 font-medium transition-colors">採用情報</a>
+      <a href="/new.html" class="px-6 py-4 text-gray-600 hover:text-blue-700 font-medium transition-colors">新卒採用</a>
+      <a href="/career.html" class="px-6 py-4 text-gray-600 hover:text-blue-700 font-medium transition-colors">中途採用</a>
+      <a href="/contact.html" class="px-6 py-4 text-gray-600 hover:text-blue-700 font-medium transition-colors">お問い合わせ</a>
     </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-6 py-12 md:py-16">
+
+    <!-- イントロダクション -->
+    <section class="bg-white p-8 md:p-10 rounded-2xl border border-gray-100 mb-12 text-center relative overflow-hidden">
+      <span class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600"></span>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">働きやすい環境づくりを目指して</h2>
+      <p class="max-w-3xl mx-auto text-gray-500 leading-relaxed">
+        当社では、従業員の皆様が仕事と生活の調和を図りながら、いきいきと活躍できる環境づくりに取り組んでいます。中小企業の枠を超えた充実の福利厚生をご用意しました。
+      </p>
+    </section>
+
+    <!-- 福利厚生カード -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
+
+      <!-- カード1: 健康・医療サポート -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white text-3xl py-8 text-center">
+          <i class="fas fa-hospital"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">健康・医療サポート</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">従業員の健康維持を全面的にサポートします</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>年１回健康診断補助</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>社会保険加入</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>ストレスチェック制度</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>1on1制度実施</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>月１回職務満足度相談実施</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- カード2: 休暇・休業制度 -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-green-500 to-green-700 text-white text-3xl py-8 text-center">
+          <i class="fas fa-heart"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">休暇・休業制度</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">ライフイベントに合わせた柔軟な休暇制度</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>年次有給休暇</li>
+            <li class="flex items-start gap-2"><i class="fas fa-check text-green-600 text-xs mt-1"></i><span>リフレッシュ休暇<br><span class="text-gray-400 text-xs">（3年・5年継続ごとに付与）</span></span></li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>慶弔休暇</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>育児・介護休業制度</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- カード3: 経済的支援 -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-red-500 to-red-700 text-white text-3xl py-8 text-center">
+          <i class="fas fa-yen-sign"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">経済的支援</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">経済的な負担を軽減する各種制度</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>家賃補助制度</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>資格取得支援制度</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>DB/CB制度支援</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>書籍購入補助</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- カード4: 日常的な福利厚生 -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-orange-400 to-orange-600 text-white text-3xl py-8 text-center">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">日常的な福利厚生</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">日々の仕事を快適にするサポート</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>交通費全額支給</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>社内部活支援</li>
+            <li class="flex items-start gap-2"><i class="fas fa-check text-green-600 text-xs mt-1"></i><span>社員割引<br><span class="text-gray-400 text-xs">（自社サービス利用時：NOKORI）</span></span></li>
+            <li class="flex items-start gap-2"><i class="fas fa-check text-green-600 text-xs mt-1"></i><span>社内イベント支援<br><span class="text-gray-400 text-xs">（バーベキュー/旅行）</span></span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- カード5: ワークライフバランス -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white text-3xl py-8 text-center">
+          <i class="fas fa-house-laptop"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">ワークライフバランス</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">柔軟な働き方を実現する制度</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>フレックスタイム制</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>リモートワーク制度</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>短時間勤務制度（要相談）</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>時間単位年休制度</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- カード6: 自己啓発支援 -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+        <div class="bg-gradient-to-br from-teal-500 to-teal-700 text-white text-3xl py-8 text-center">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 text-center mb-1.5">自己啓発支援</h3>
+          <p class="text-sm text-gray-500 text-center mb-5">キャリアアップを全面的にバックアップ</p>
+          <ul class="space-y-2.5 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>教育訓練費用の補助</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>eラーニング教材の提供</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>キャリアコンサルティング</li>
+            <li class="flex items-center gap-2"><i class="fas fa-check text-green-600 text-xs"></i>外部セミナー参加支援</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CTAセクション -->
+    <section class="bg-white p-10 md:p-14 rounded-2xl border border-gray-100 text-center">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">私たちと一緒に働きませんか？</h2>
+      <p class="text-gray-500 mb-8 max-w-2xl mx-auto">充実した福利厚生と働きやすい環境で、あなたのキャリアをサポートします。</p>
+      <a href="/recruit.html" class="inline-flex items-center gap-2 bg-blue-700 text-white font-bold px-9 py-3.5 rounded-full hover:bg-blue-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+        採用情報を見る <i class="fas fa-arrow-right text-sm"></i>
+      </a>
+    </section>
+
+  </div>
+
+  <!-- フッター -->
+  <footer class="bg-gradient-to-b from-[#0b2447] to-[#12395e] text-white py-10 mt-8">
+    <p class="text-center text-sm text-white/60">© 2024 DXPRO SOLUTIONS. All rights reserved.</p>
+  </footer>
+
 </body>
 </html>
