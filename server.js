@@ -862,9 +862,9 @@ app.get("/api/applications", requireLogin, async (req, res) => {
     const query = isAdmin ? {} : { userId: req.session.userId };
 
     const newgradApps = (await NewgradApplication.find(query).lean())
-      .map(app => ({ ...app, type: "新卒" }));
+      .map(app => ({ ...app, type: "新卒", typeKey: "newgrad" }));
     const careerApps = (await CareerApplication.find(query).lean())
-      .map(app => ({ ...app, type: "中途" }));
+      .map(app => ({ ...app, type: "中途", typeKey: "career" }));
 
     const allApps = [...newgradApps, ...careerApps].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -1165,9 +1165,15 @@ io.on("connection", (socket) => {
   });
   socket.on("sendMessage", async (data) => {
     try {
+      // applicationType を正規化（日本語 → 英語キー）
+      const typeNormalize = (t) => {
+        if (t === "新卒") return "newgrad";
+        if (t === "中途" || t === "キャリア") return "career";
+        return t;
+      };
       const msg = new ChatMessage({
         applicationId: data.applicationId,
-        applicationType: data.applicationType,
+        applicationType: typeNormalize(data.applicationType),
         senderId: data.senderId,
         senderName: data.senderName,
         senderRole: data.senderRole,
