@@ -21,6 +21,11 @@
         <a href="/application-status.html" class="border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium py-2 px-4 rounded-xl transition text-sm inline-flex items-center gap-1.5">
           <i class="fas fa-arrow-left text-xs"></i>応募履歴へ戻る
         </a>
+        <div id="editBtnWrap" class="hidden">
+          <a id="editBtn" href="#" class="bg-blue-700 text-white font-medium py-2 px-4 rounded-xl hover:bg-blue-800 transition text-sm inline-flex items-center gap-1.5">
+            <i class="fas fa-pen text-xs"></i>編集
+          </a>
+        </div>
       </div>
 
       <div id="content">
@@ -118,6 +123,16 @@
       const isAdmin = me && me.role === "admin";
       const stages = stagesRes.ok ? await stagesRes.json() : [];
       const isCareer = a.type === "中途";
+
+      // 編集可否チェック
+      const firstStage = stages.filter(s => !s.isRejection).sort((x,y) => x.order - y.order)[0];
+      const editableNames = [null, undefined, "", "送信済み", "書類選考中"];
+      if (firstStage) editableNames.push(firstStage.name);
+      const canEdit = isAdmin || editableNames.includes(a.status);
+      if (canEdit) {
+        document.getElementById("editBtnWrap").classList.remove("hidden");
+        document.getElementById("editBtn").href = "/application-edit.html?id=" + a._id;
+      }
 
       // ステータス
       const headerHtml = `

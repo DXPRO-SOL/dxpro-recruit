@@ -90,6 +90,7 @@ const protectedPages = [
   "/recruit.html",
   "/settings.html",
   "/pipeline-settings.html",
+  "/application-edit.html",
   "/position-detail.html",
   "/position-detail2.html", 
   "/position-detail3.html",
@@ -964,6 +965,97 @@ app.get("/api/application/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: "error", message: "サーバーエラー" });
+  }
+});
+
+// 応募編集 (書類選考中のみ / 本人 or 管理者)
+app.put("/api/application/:id", upload.fields([
+  { name: "resume", maxCount: 1 },
+  { name: "career", maxCount: 1 },
+  { name: "portfolioFiles", maxCount: 5 }
+]), async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const { id } = req.params;
+    const user = await User.findById(req.session.userId);
+    const isAdmin = user && user.role === "admin";
+
+    // どちらのモデルか判定
+    let Model = null;
+    let existing = await NewgradApplication.findById(id);
+    if (existing) { Model = NewgradApplication; }
+    else {
+      existing = await CareerApplication.findById(id);
+      if (existing) Model = CareerApplication;
+    }
+    if (!existing || !Model) return res.status(404).json({ error: "応募が見つかりません" });
+
+    // 権限チェック
+    if (!isAdmin && String(existing.userId) !== String(req.session.userId)) {
+      return res.status(403).json({ error: "権限がありません" });
+    }
+
+    // 編集可能ステージチェック（管理者は制限なし）
+    if (!isAdmin) {
+      const setting = await PipelineSetting.findOne();
+      const stages = setting ? setting.stages : [];
+      const firstStage = stages.filter(s => !s.isRejection).sort((a,b) => a.order - b.order)[0];
+      const editableStageNames = [null, undefined, "", "送信済み", "書類選考中"];
+      if (firstStage) editableStageNames.push(firstStage.name);
+      if (!editableStageNames.includes(existing.status)) {
+        return res.status(400).json({ error: "この選考ステージでは編集できません" });
+      }
+    }
+
+    // 更新フィールド
+    const fields = req.body;
+    const EDITABLE = ["lastName","firstName","hurilastName","hurifirstName","birthdate","phone","gender","email",
+      "postalCode","prefecture","city","addressDetail","noAddress",
+      "education","major","graduation","position","locationPreference",
+      "currentCompany","currentPosition","currentJobDescription","experienceYears","gold",
+      "pr","motivation","changeReason","desiredJoinDate","portfolio"];
+
+    const updateData = {};
+    EDITABLE.forEach(key => {
+      if (fields[key] !== undefined) {
+        if (key === "noAddress") updateData[key] = fields[key] === "on" || fields[key] === "true" || fields[key] === true;
+        else updateData[key] = fields[key];
+      }
+    });
+
+    // ファイル更新
+    const files = req.files || {};
+    const fixName = (name) => { try { const d = Buffer.from(name,'latin1').toString('utf8'); return d !== name ? d : name; } catch(e){ return name; } };
+
+    if (files.resume?.[0]) {
+      const f = files.resume[0];
+      const fixedName = fixName(f.originalname);
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      updateData.resumeFileId = stored._id;
+      updateData.resumeFileName = fixedName;
+    }
+    if (files.career?.[0]) {
+      const f = files.career[0];
+      const fixedName = fixName(f.originalname);
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      updateData.careerFileId = stored._id;
+      updateData.careerFileName = fixedName;
+    }
+    if (files.portfolioFiles && files.portfolioFiles.length > 0) {
+      const newPortfolioFileIds = [];
+      for (const f of files.portfolioFiles) {
+        const fixedName = fixName(f.originalname);
+        const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+        newPortfolioFileIds.push({ fileId: stored._id, fileName: fixedName });
+      }
+      updateData.portfolioFileIds = newPortfolioFileIds;
+    }
+
+    await Model.findByIdAndUpdate(id, updateData);
+    res.json({ status: "success", message: "更新しました" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
