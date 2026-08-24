@@ -38,8 +38,8 @@ const CareerApplicationSchema = new mongoose.Schema({
   gold: { type: String }, // 希望年収
 
   // 添付資料
-  career: { type: String, required: true }, // 職務経歴書
-  resume: { type: String, required: true },
+  career: { type: String }, // 職務経歴書
+  resume: { type: String },
   portfolioFiles: [String], // 複数ファイル
   portfolio: { type: String }, // GitHub / URL
 

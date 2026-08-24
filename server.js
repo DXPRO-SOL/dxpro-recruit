@@ -400,8 +400,8 @@ app.post("/apply/career", upload.fields([
       ...req.body,
       consent: req.body.consent === "on",
       noAddress: req.body.noAddress === "on" || req.body.noAddress === "true" || req.body.noAddress === true,
-      resume: files.resume?.[0]?.path || "",
-      career: files.career?.[0]?.path || "",
+      resume: files.resume?.[0]?.path || undefined,
+      career: files.career?.[0]?.path || undefined,
       portfolioFiles: files.portfolioFiles?.map(f=>f.path) || []
     };
 
