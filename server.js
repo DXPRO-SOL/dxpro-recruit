@@ -15,6 +15,9 @@ const fs = require("fs");
 const upload = multer({ dest: "uploads/" }); // 임시 저장 폴더
 const chatUpload = multer({ dest: "uploads/chat/", limits: { fileSize: 10 * 1024 * 1024 } }); // チャット添付 10MB
 
+// uploadsディレクトリの確保
+fs.mkdirSync(path.join(__dirname, "uploads/chat"), { recursive: true });
+
 const User = require("./models/User");
 const Application = require("./models/Application");
 const NewgradApplication = require("./models/NewgradApplication");
@@ -104,8 +107,7 @@ app.use((req, res, next) => {
 
 // 정적 파일
 app.use(express.static("public"));
-app.use("/uploads", express.static("uploads")); // アップロードファイルを公開
-app.use("/uploads/chat", express.static("uploads/chat")); // チャット添付ファイルを公開
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // アップロードファイルを公開
 
 // 로그인 API
 app.post("/login", async (req, res) => {
@@ -280,8 +282,7 @@ async function sendApplicationEmailNew(fields, files) {
     text: textContent,
     attachments
   });
-
-  attachments.forEach(f => fs.unlinkSync(f.path)); // 一時ファイル削除
+  // ファイルはuploads/に保持（詳細画面でダウンロード可能にするため削除しない）
 }
 
 async function sendApplicationEmailCareer(fields, files) {
@@ -370,9 +371,7 @@ async function sendApplicationEmailCareer(fields, files) {
     text: textContent,
     attachments
   });
-
-  // 一時ファイル削除
-  attachments.forEach(f => fs.unlinkSync(f.path));
+  // ファイルはuploads/に保持（詳細画面でダウンロード可能にするため削除しない）
 }
 
 // 신입 지원
