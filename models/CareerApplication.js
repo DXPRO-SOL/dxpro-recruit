@@ -54,6 +54,9 @@ const CareerApplicationSchema = new mongoose.Schema({
   changeReason: { type: String }, // 転職理由
   desiredJoinDate: { type: String, enum: ["即日","１ヶ月以内", "２ヶ月以内"] }, // 希望入社時期
 
+  // 選考ステージ
+  status: { type: String, default: null },
+
   // 同意
   consent: { type: Boolean, required: true }
 

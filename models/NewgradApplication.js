@@ -43,6 +43,9 @@ const NewgradApplicationSchema = new mongoose.Schema({
   pr: { type: String },
   motivation: { type: String },
 
+  // 選考ステージ
+  status: { type: String, default: null },
+
   // 동의
   consent: { type: Boolean, required: true }
 }, { timestamps: true });
