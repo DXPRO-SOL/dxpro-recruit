@@ -126,7 +126,7 @@
 
       // 編集可否チェック
       const firstStage = stages.filter(s => !s.isRejection).sort((x,y) => x.order - y.order)[0];
-      const editableNames = [null, undefined, "", "送信済み", "書類選考中"];
+      const editableNames = [null, undefined, "", "送信済み"];
       if (firstStage) editableNames.push(firstStage.name);
       const canEdit = isAdmin || editableNames.includes(a.status);
       if (canEdit) {

@@ -859,13 +859,14 @@ app.post("/api/user/me", requireLogin, async (req, res) => {
 // ================== パイプライン設定 API ==================
 
 const DEFAULT_STAGES = [
-  { id: "submitted",   name: "書類選考中", color: "gray",   order: 0, isRejection: false },
-  { id: "doc_passed",  name: "書類通過",   color: "blue",   order: 1, isRejection: false },
-  { id: "interview1",  name: "一次面接",   color: "yellow", order: 2, isRejection: false },
-  { id: "interview2",  name: "二次面接",   color: "orange", order: 3, isRejection: false },
-  { id: "final",       name: "最終面接",   color: "purple", order: 4, isRejection: false },
-  { id: "offer",       name: "内定",       color: "green",  order: 5, isRejection: false },
-  { id: "rejected",    name: "不採用",     color: "red",    order: 6, isRejection: true  },
+  { id: "received",    name: "応募受付",   color: "teal",   order: 0, isRejection: false },
+  { id: "submitted",   name: "書類選考中", color: "gray",   order: 1, isRejection: false },
+  { id: "doc_passed",  name: "書類通過",   color: "blue",   order: 2, isRejection: false },
+  { id: "interview1",  name: "一次面接",   color: "yellow", order: 3, isRejection: false },
+  { id: "interview2",  name: "二次面接",   color: "orange", order: 4, isRejection: false },
+  { id: "final",       name: "最終面接",   color: "purple", order: 5, isRejection: false },
+  { id: "offer",       name: "内定",       color: "green",  order: 6, isRejection: false },
+  { id: "rejected",    name: "不採用",     color: "red",    order: 7, isRejection: true  },
 ];
 
 // ステージ取得（全員）
@@ -1000,7 +1001,7 @@ app.put("/api/application/:id", upload.fields([
       const setting = await PipelineSetting.findOne();
       const stages = setting ? setting.stages : [];
       const firstStage = stages.filter(s => !s.isRejection).sort((a,b) => a.order - b.order)[0];
-      const editableStageNames = [null, undefined, "", "送信済み", "書類選考中"];
+      const editableStageNames = [null, undefined, "", "送信済み"];
       if (firstStage) editableStageNames.push(firstStage.name);
       if (!editableStageNames.includes(existing.status)) {
         return res.status(400).json({ error: "この選考ステージでは編集できません" });
