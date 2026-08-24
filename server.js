@@ -103,6 +103,7 @@ app.use((req, res, next) => {
 
 // 정적 파일
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads")); // アップロードファイルを公開
 
 // 로그인 API
 app.post("/login", async (req, res) => {

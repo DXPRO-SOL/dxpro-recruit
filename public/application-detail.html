@@ -41,6 +41,10 @@
         <p class="text-gray-500 font-medium mb-2">人事担当者からの連絡</p>
         <div id="appHRComment" class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">読み込み中...</div>
       </div>
+      <div id="filesSection" class="hidden">
+        <p class="text-gray-500 font-medium mb-3">添付ファイル</p>
+        <div id="filesList" class="flex flex-wrap gap-3"></div>
+      </div>
     </div>
   </div>
 
@@ -86,6 +90,26 @@
         document.getElementById("appPR").textContent = app.pr || "なし";
         document.getElementById("appMotivation").textContent = app.motivation || "なし";
         document.getElementById("appHRComment").textContent = app.hrComment || "なし";
+
+        // 添付ファイル表示
+        const fileEntries = [];
+        if (app.resume) fileEntries.push({ label: "履歴書", path: app.resume });
+        if (app.career) fileEntries.push({ label: "職務経歴書", path: app.career });
+        if (app.portfolioFiles && app.portfolioFiles.length > 0) {
+          app.portfolioFiles.forEach((p, i) => fileEntries.push({ label: `作品ファイル ${i + 1}`, path: p }));
+        }
+        if (fileEntries.length > 0) {
+          const icons = { "履歴書": "fa-file-pdf", "職務経歴書": "fa-file-alt" };
+          document.getElementById("filesSection").classList.remove("hidden");
+          document.getElementById("filesList").innerHTML = fileEntries.map(f => {
+            const url = "/" + f.path.replace(/\\/g, "/");
+            const icon = icons[f.label] || "fa-file";
+            return `<a href="${url}" target="_blank"
+              class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-medium">
+              <i class="fas ${icon}"></i>${f.label}
+            </a>`;
+          }).join("");
+        }
         } else {
         document.getElementById("applicationDetail").innerHTML = `<p class="text-center text-gray-500">応募情報が見つかりません</p>`;
         }
