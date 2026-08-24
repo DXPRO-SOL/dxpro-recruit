@@ -26,6 +26,8 @@ const app = express();
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
+app.set("trust proxy", 1);
+
 // MongoDB 연결
 mongoose.connect("mongodb+srv://dxprosol:kim650323@dxpro.ealx5.mongodb.net/dxpro-recruit");
 
@@ -35,7 +37,12 @@ app.use(session({
   secret: "dxpro_secret",
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: "mongodb+srv://dxprosol:kim650323@dxpro.ealx5.mongodb.net/dxpro-recruit" })
+  store: MongoStore.create({ mongoUrl: "mongodb+srv://dxprosol:kim650323@dxpro.ealx5.mongodb.net/dxpro-recruit" }),
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 1000 * 60 * 60 * 24
+  }
 }));
 
 // 다국어 설정
