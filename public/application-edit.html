@@ -174,7 +174,12 @@
           <p id="careerCurrentFile" class="file-current hidden">現在: <a id="careerFileLink" href="#" target="_blank"></a>（新しいファイルを選択すると上書きされます）</p>
         </div>
         <div class="field-group">
-          <label>ポートフォリオ URL</label>
+          <label>ポートフォリオ（ファイル）<span class="text-gray-400 font-normal text-xs ml-1">複数可</span></label>
+          <input type="file" name="portfolioFiles" multiple accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg" class="form-input">
+          <div id="portfolioCurrentFiles" class="hidden mt-1.5 space-y-1"></div>
+        </div>
+        <div class="field-group">
+          <label>GitHub / ポートフォリオ URL</label>
           <input type="url" name="portfolio" class="form-input" placeholder="https://github.com/...">
         </div>
       </div>
@@ -282,6 +287,16 @@
         link.href = "/api/file/" + a.careerFileId;
         link.textContent = a.careerFileName || "職務経歴書";
         el.classList.remove("hidden");
+      }
+      // ポートフォリオファイル（現在）
+      if (a.portfolioFileIds && a.portfolioFileIds.length > 0) {
+        const container = document.getElementById("portfolioCurrentFiles");
+        container.classList.remove("hidden");
+        container.innerHTML = '<p class="text-xs text-gray-500 mb-1">現在のファイル（新しいファイルを選択すると上書きされます）:</p>' +
+          a.portfolioFileIds.map(pf =>
+            '<a href="/api/file/' + pf.fileId + '" target="_blank" class="flex items-center gap-1.5 text-xs text-blue-600 hover:underline">' +
+            '<i class="fas fa-file text-blue-400"></i>' + (pf.fileName || 'ファイル') + '</a>'
+          ).join("");
       }
 
       document.getElementById("loadingState").classList.add("hidden");
