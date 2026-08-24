@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>応募管理 - DXPRO SOLUTIONS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; }
+    .app-row:hover { background: #f0f7ff; }
+    .stage-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <header class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-6 py-4 flex items-center gap-4 shadow-lg">
+    <a href="/index.html" class="text-white/70 hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div class="flex-1">
+      <p class="font-bold text-lg leading-tight">応募管理</p>
+      <p class="text-white/60 text-xs">全応募者の選考状況を管理</p>
+    </div>
+    <a href="/pipeline-settings.html" class="text-white/70 hover:text-white transition text-sm flex items-center gap-1.5">
+      <i class="fas fa-cog"></i><span class="hidden md:inline">ステージ設定</span>
+    </a>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- フィルターバー -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-5 flex flex-wrap gap-3 items-center">
+      <div class="relative flex-1 min-w-48">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <input id="searchInput" type="text" placeholder="名前・メールで検索..."
+          class="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+          oninput="filterApps()">
+      </div>
+      <div class="flex gap-2 flex-wrap" id="typeFilters">
+        <button onclick="setTypeFilter('all')" data-filter="all" class="type-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-blue-700 text-white transition">すべて</button>
+        <button onclick="setTypeFilter('新卒')" data-filter="新卒" class="type-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition">新卒</button>
+        <button onclick="setTypeFilter('中途')" data-filter="中途" class="type-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition">中途</button>
+      </div>
+      <select id="stageFilter" onchange="filterApps()" class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white">
+        <option value="">すべてのステージ</option>
+      </select>
+      <span id="countBadge" class="text-xs text-gray-400 ml-auto"></span>
+    </div>
+
+    <!-- テーブル -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              <th class="px-5 py-3.5 text-left">応募者</th>
+              <th class="px-4 py-3.5 text-left">区分</th>
+              <th class="px-4 py-3.5 text-left">ポジション</th>
+              <th class="px-4 py-3.5 text-left">ステージ</th>
+              <th class="px-4 py-3.5 text-left">応募日</th>
+              <th class="px-4 py-3.5 text-left">操作</th>
+            </tr>
+          </thead>
+          <tbody id="appTableBody">
+            <tr><td colspan="6" class="text-center text-gray-400 py-12"><i class="fas fa-spinner fa-spin text-xl block mb-2"></i>読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const positionMap = { frontend:"フロントエンドエンジニア", backend:"バックエンドエンジニア", designer:"UIデザイナー", pm:"プロジェクトマネージャー", consultant:"ITコンサルタント", qaengineer:"QAエンジニア" };
+    const colorMap = { gray:"bg-gray-100 text-gray-700", blue:"bg-blue-100 text-blue-700", yellow:"bg-yellow-100 text-yellow-700", orange:"bg-orange-100 text-orange-700", purple:"bg-purple-100 text-purple-700", green:"bg-green-100 text-green-700", red:"bg-red-100 text-red-700", pink:"bg-pink-100 text-pink-700", teal:"bg-teal-100 text-teal-700", indigo:"bg-indigo-100 text-indigo-700" };
+
+    let allApps = [], stages = [], currentTypeFilter = "all";
+
+    function stageBadge(statusName) {
+      const s = stages.find(st => st.name === statusName);
+      if (!s) return '<span class="stage-badge bg-gray-100 text-gray-600">' + escH(statusName || "書類選考中") + '</span>';
+      const cls = colorMap[s.color] || colorMap.gray;
+      return '<span class="stage-badge ' + cls + '">' + escH(s.name) + '</span>';
+    }
+
+    function stageSelect(appId, currentStatus) {
+      const opts = stages.map(s =>
+        '<option value="' + escH(s.name) + '"' + (s.name === currentStatus ? ' selected' : '') + '>' + escH(s.name) + '</option>'
+      ).join("");
+      return '<select onchange="updateStage('' + appId + '',this.value)" onclick="event.stopPropagation()"' +
+        ' class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white">' + opts + '</select>';
+    }
+
+    function setTypeFilter(type) {
+      currentTypeFilter = type;
+      document.querySelectorAll(".type-btn").forEach(btn => {
+        const active = btn.dataset.filter === type;
+        btn.className = "type-btn text-xs px-3 py-1.5 rounded-lg font-medium transition " +
+          (active ? "bg-blue-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50");
+      });
+      filterApps();
+    }
+
+    function filterApps() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const stageF = document.getElementById("stageFilter").value;
+      const tbody = document.getElementById("appTableBody");
+      let visible = 0;
+      const rows = tbody.querySelectorAll("tr[data-id]");
+      rows.forEach(row => {
+        const typeMatch = currentTypeFilter === "all" || row.dataset.type === currentTypeFilter;
+        const stageMatch = !stageF || row.dataset.stage === stageF;
+        const searchMatch = !q || (row.dataset.search || "").includes(q);
+        const show = typeMatch && stageMatch && searchMatch;
+        row.style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      document.getElementById("countBadge").textContent = visible + " 件";
+    }
+
+    async function updateStage(appId, stageName) {
+      const res = await fetch("/api/application/" + appId + "/stage", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: stageName })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        const row = document.querySelector('tr[data-id="' + appId + '"]');
+        if (row) {
+          row.dataset.stage = stageName;
+          row.querySelector(".stage-cell").innerHTML = stageBadge(stageName);
+          row.querySelector(".stage-select-cell").innerHTML = stageSelect(appId, stageName);
+        }
+      } else {
+        alert("更新に失敗しました");
+      }
+    }
+
+    function renderTable(apps) {
+      const tbody = document.getElementById("appTableBody");
+      if (apps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-12"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>応募がありません</td></tr>';
+        return;
+      }
+      tbody.innerHTML = apps.map(app => {
+        const name = (app.lastName || "") + " " + (app.firstName || "");
+        const pos = positionMap[app.position] || app.position || "-";
+        const date = new Date(app.createdAt).toLocaleDateString("ja-JP");
+        const statusName = app.status || "書類選考中";
+        const searchStr = (name + " " + (app.email || "")).toLowerCase();
+        return '<tr class="app-row border-b border-gray-50 cursor-pointer" data-id="' + app._id + '" data-type="' + escH(app.type) + '" data-stage="' + escH(statusName) + '" data-search="' + escH(searchStr) + '" onclick="goDetail('' + app._id + '')">' +
+          '<td class="px-5 py-3.5">' +
+          '<div class="font-semibold text-gray-800">' + escH(name.trim() || "名前なし") + '</div>' +
+          '<div class="text-xs text-gray-400">' + escH(app.email || "") + '</div>' +
+          '</td>' +
+          '<td class="px-4 py-3.5"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + (app.type === "新卒" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700") + '">' + escH(app.type) + '</span></td>' +
+          '<td class="px-4 py-3.5 text-gray-600 text-xs">' + escH(pos) + '</td>' +
+          '<td class="px-4 py-3.5"><span class="stage-cell">' + stageBadge(statusName) + '</span></td>' +
+          '<td class="px-4 py-3.5 text-gray-400 text-xs">' + date + '</td>' +
+          '<td class="px-4 py-3.5" onclick="event.stopPropagation()"><div class="flex items-center gap-2">' +
+          '<span class="stage-select-cell">' + stageSelect(app._id, statusName) + '</span>' +
+          '<a href="/chat.html?applicationId=' + app._id + '&type=' + (app.typeKey || app.type) + '" class="text-blue-600 hover:text-blue-800 text-xs" title="チャット"><i class="fas fa-comment-dots"></i></a>' +
+          '</div></td>' +
+          '</tr>';
+      }).join("");
+    }
+
+    function goDetail(id) { location.href = "/application-detail.html?id=" + id; }
+    function escH(str) { if (!str) return ""; return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+    async function init() {
+      const [appsRes, stagesRes, meRes] = await Promise.all([
+        fetch("/api/applications"),
+        fetch("/api/pipeline/stages"),
+        fetch("/api/me")
+      ]);
+
+      const me = meRes.ok ? await meRes.json() : null;
+      if (!me || me.role !== "admin") { location.href = "/index.html"; return; }
+
+      const appsData = await appsRes.json();
+      allApps = (appsData.applications || []);
+
+      stages = await stagesRes.json();
+      if (!Array.isArray(stages)) stages = [];
+
+      // ステージフィルターオプション生成
+      const sel = document.getElementById("stageFilter");
+      stages.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.name; opt.textContent = s.name;
+        sel.appendChild(opt);
+      });
+
+      renderTable(allApps);
+      document.getElementById("countBadge").textContent = allApps.length + " 件";
+    }
+
+    init();
+  </script>
+</body>
+</html>

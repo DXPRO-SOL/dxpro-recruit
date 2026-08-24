@@ -36,14 +36,31 @@
       consultant: "ITコンサルタント", qaengineer: "QAエンジニア"
     };
 
-    function badge(status) {
-      const base = "py-1 px-3 rounded-full text-sm font-semibold";
-      switch(status) {
-        case '承認済み': return `<span class="bg-green-100 text-green-800 ${base}">${status}</span>`;
-        case '進行中': return `<span class="bg-yellow-100 text-yellow-800 ${base}">${status}</span>`;
-        case '却下': return `<span class="bg-red-100 text-red-800 ${base}">${status}</span>`;
-        default: return `<span class="bg-gray-100 text-gray-700 ${base}">${status || '送信済み'}</span>`;
+    function badge(status, stages) {
+      if (!stages || stages.length === 0) {
+        const base = "py-1 px-3 rounded-full text-sm font-semibold";
+        switch(status) {
+          case '承認済み': return `<span class="bg-green-100 text-green-800 ${base}">${status}</span>`;
+          case '進行中': return `<span class="bg-yellow-100 text-yellow-800 ${base}">${status}</span>`;
+          case '却下': return `<span class="bg-red-100 text-red-800 ${base}">${status}</span>`;
+          default: return `<span class="bg-gray-100 text-gray-700 ${base}">${status || '書類選考中'}</span>`;
+        }
       }
+      const stage = stages.find(s => s.name === status) || stages[0];
+      const colorMap = {
+        gray:   "bg-gray-100 text-gray-700",
+        blue:   "bg-blue-100 text-blue-700",
+        yellow: "bg-yellow-100 text-yellow-700",
+        orange: "bg-orange-100 text-orange-700",
+        purple: "bg-purple-100 text-purple-700",
+        green:  "bg-green-100 text-green-700",
+        red:    "bg-red-100 text-red-700",
+        pink:   "bg-pink-100 text-pink-700",
+        teal:   "bg-teal-100 text-teal-700",
+        indigo: "bg-indigo-100 text-indigo-700",
+      };
+      const cls = colorMap[stage.color] || colorMap.gray;
+      return `<span class="py-1 px-3 rounded-full text-sm font-semibold ${cls}">${stage.name}</span>`;
     }
 
     function row(label, value) {
@@ -88,11 +105,18 @@
       const id = new URLSearchParams(location.search).get("id");
       if (!id) { document.getElementById("content").innerHTML = `<p class="text-red-500 text-center">IDが指定されていません</p>`; return; }
 
-      const res = await fetch(`/api/application/${id}`);
+      const [res, meRes, stagesRes] = await Promise.all([
+        fetch(`/api/application/${id}`),
+        fetch("/api/me"),
+        fetch("/api/pipeline/stages")
+      ]);
       const data = await res.json();
       if (data.status !== "success") { document.getElementById("content").innerHTML = `<p class="text-red-500 text-center">応募情報が見つかりません</p>`; return; }
 
       const a = data.application;
+      const me = meRes.ok ? await meRes.json() : null;
+      const isAdmin = me && me.role === "admin";
+      const stages = stagesRes.ok ? await stagesRes.json() : [];
       const isCareer = a.type === "中途";
 
       // ステータス
@@ -107,9 +131,49 @@
           </div>
           <div class="flex flex-wrap gap-2 items-center">
             <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">${a.type || "不明"}</span>
-            ${badge(a.status)}
+            ${badge(a.status, stages)}
           </div>
         </div>`;
+
+      // 選考ステージ（管理者のみ変更可能）
+      const colorMap = { gray:"bg-gray-100 text-gray-700", blue:"bg-blue-100 text-blue-700", yellow:"bg-yellow-100 text-yellow-700", orange:"bg-orange-100 text-orange-700", purple:"bg-purple-100 text-purple-700", green:"bg-green-100 text-green-700", red:"bg-red-100 text-red-700", pink:"bg-pink-100 text-pink-700", teal:"bg-teal-100 text-teal-700", indigo:"bg-indigo-100 text-indigo-700" };
+      const normalStages = stages.filter(s => !s.isRejection).sort((a,b) => a.order - b.order);
+      const rejStages = stages.filter(s => s.isRejection);
+      const currentStage = stages.find(s => s.name === a.status) || stages[0];
+
+      let stageHtml = "";
+      if (stages.length > 0) {
+        const stepsHtml = normalStages.map((s, i) => {
+          const isActive = currentStage && s.name === currentStage.name;
+          const isPast = currentStage && !currentStage.isRejection && s.order < currentStage.order;
+          const dotCls = isActive ? "w-5 h-5 rounded-full bg-blue-600 border-2 border-blue-600 flex items-center justify-center" :
+                         isPast  ? "w-5 h-5 rounded-full bg-blue-200 border-2 border-blue-300 flex items-center justify-center" :
+                                   "w-5 h-5 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center";
+          const lineCls = isPast || isActive ? "flex-1 h-0.5 bg-blue-300" : "flex-1 h-0.5 bg-gray-200";
+          const nameCls = isActive ? "text-blue-700 font-bold" : isPast ? "text-blue-400" : "text-gray-400";
+          const clickHandler = isAdmin ? `onclick="updateStage('${a._id}','${escapeHtml(s.name)}')" style="cursor:pointer"` : "";
+          return '<div class="flex flex-col items-center" ' + clickHandler + ' title="' + escapeHtml(s.name) + '">' +
+            '<div class="' + dotCls + '">' + (isPast ? '<i class="fas fa-check text-blue-400 text-[8px]"></i>' : isActive ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : '') + '</div>' +
+            '<span class="text-[10px] mt-1 ' + nameCls + ' text-center w-14 leading-tight">' + escapeHtml(s.name) + '</span>' +
+            '</div>' + (i < normalStages.length - 1 ? '<div class="' + lineCls + ' mt-2.5 mx-1"></div>' : '');
+        }).join("");
+
+        const rejBtns = isAdmin ? rejStages.map(s => {
+          const cls = colorMap[s.color] || colorMap.gray;
+          const isActive2 = currentStage && s.name === currentStage.name;
+          return '<button onclick="updateStage(\'' + a._id + '\',\'' + escapeHtml(s.name) + '\')" class="text-xs px-3 py-1.5 rounded-full font-medium border transition ' + cls + (isActive2 ? ' ring-2 ring-offset-1 ring-red-400' : ' opacity-70 hover:opacity-100') + '">' + escapeHtml(s.name) + '</button>';
+        }).join("") : rejStages.filter(s => currentStage && s.name === currentStage.name).map(s => '<span class="text-xs px-3 py-1.5 rounded-full font-medium ' + (colorMap[s.color] || colorMap.gray) + '">' + escapeHtml(s.name) + '</span>').join("");
+
+        stageHtml = `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div class="flex items-center justify-between mb-4">
+            <p class="text-sm font-bold text-gray-600">選考ステージ</p>
+            ${isAdmin ? `<a href="/pipeline-settings.html" class="text-xs text-blue-500 hover:underline"><i class="fas fa-cog mr-1"></i>ステージ設定</a>` : ""}
+          </div>
+          <div class="flex items-start overflow-x-auto pb-2">${stepsHtml}</div>
+          ${rejBtns ? `<div class="mt-3 flex flex-wrap gap-2">${rejBtns}</div>` : ""}
+          ${isAdmin && currentStage ? `<p class="text-xs text-gray-400 mt-2">現在: <span class="font-medium text-gray-600">${escapeHtml(currentStage.name)}</span> ${isAdmin ? "（ステージをクリックして変更）" : ""}</p>` : ""}
+        </div>`;
+      }
 
       // 基本情報
       const basicHtml = section("基本情報", "fa-id-card", [
@@ -204,8 +268,23 @@
       </div>`;
 
       document.getElementById("content").innerHTML =
-        headerHtml + basicHtml + addressHtml + eduHtml + prefHtml + careerHtml +
+        headerHtml + stageHtml + basicHtml + addressHtml + eduHtml + prefHtml + careerHtml +
         prHtml + motivationHtml + changeReasonHtml + portfolioUrlHtml + filesHtml + hrHtml;
+    }
+
+    async function updateStage(appId, stageName) {
+      const res = await fetch("/api/application/" + appId + "/stage", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: stageName })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        // リロードして最新のステージを反映
+        load();
+      } else {
+        alert("更新に失敗しました: " + (data.error || ""));
+      }
     }
 
     load();

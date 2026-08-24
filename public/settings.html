@@ -98,6 +98,20 @@
           class="block text-center border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition">
           <i class="fas fa-arrow-left mr-1.5 text-xs"></i>ホームに戻る
         </a>
+        <!-- 管理者用リンク -->
+        <div id="adminLinks" class="hidden pt-2 border-t border-gray-100">
+          <p class="text-xs text-gray-400 mb-2 font-medium">管理者メニュー</p>
+          <a href="/pipeline-settings.html"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-medium">
+            <i class="fas fa-project-diagram"></i>選考ステージ設定
+            <span class="ml-auto text-blue-400 text-xs">採用パイプライン管理 →</span>
+          </a>
+          <a href="/application-case.html"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 text-gray-700 hover:bg-gray-100 transition text-sm font-medium mt-2">
+            <i class="fas fa-users"></i>応募管理
+            <span class="ml-auto text-gray-400 text-xs">全応募者を管理 →</span>
+          </a>
+        </div>
       </div>
     </form>
   </div>
@@ -111,6 +125,15 @@ async function loadUser() {
     if (!res.ok) throw new Error("ユーザー情報取得失敗");
     const data = await res.json();
     const user = data.user;
+
+    // 管理者メニュー表示
+    const meRes = await fetch("/api/me");
+    if (meRes.ok) {
+      const me = await meRes.json();
+      if (me && me.role === "admin") {
+        document.getElementById("adminLinks").classList.remove("hidden");
+      }
+    }
 
     document.querySelector('[name="username"]').value = user.username;
     document.querySelector('[name="email"]').value = user.email;

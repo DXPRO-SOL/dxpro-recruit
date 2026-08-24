@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>選考ステージ設定 - DXPRO SOLUTIONS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; }
+    .stage-row { transition: background 0.15s; }
+    .stage-row:hover { background: #f8fafc; }
+    .drag-handle { cursor: grab; }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost { opacity: 0.4; background: #dbeafe; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-16">
+
+  <header class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-6 py-4 flex items-center gap-4 shadow-lg">
+    <a href="/settings.html" class="text-white/70 hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div>
+      <p class="font-bold text-lg leading-tight">選考ステージ設定</p>
+      <p class="text-white/60 text-xs">採用パイプラインのステージを管理</p>
+    </div>
+  </header>
+
+  <div class="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+
+    <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-medium"></div>
+
+    <!-- ステージ一覧 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-gray-900 text-lg">選考ステージ</h2>
+          <p class="text-gray-400 text-sm mt-0.5">ドラッグで順序を変更できます</p>
+        </div>
+        <button onclick="addStage()" class="bg-blue-700 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-800 transition flex items-center gap-2">
+          <i class="fas fa-plus"></i>追加
+        </button>
+      </div>
+
+      <div id="stageList" class="divide-y divide-gray-50">
+        <div class="text-center py-8 text-gray-400"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- カラーガイド -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3 class="font-bold text-gray-700 text-sm mb-3">カラーガイド</h3>
+      <div class="flex flex-wrap gap-2" id="colorGuide"></div>
+    </div>
+
+    <!-- 保存ボタン -->
+    <div class="flex gap-3">
+      <button onclick="resetDefault()" class="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl hover:bg-gray-50 transition font-medium text-sm">
+        <i class="fas fa-redo mr-2"></i>デフォルトに戻す
+      </button>
+      <button onclick="saveStages()" class="flex-1 bg-blue-700 text-white py-3 rounded-xl hover:bg-blue-800 transition font-bold text-sm">
+        <i class="fas fa-save mr-2"></i>保存
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    const COLORS = [
+      { id: "gray",   label: "グレー",   bg: "bg-gray-100",   text: "text-gray-700" },
+      { id: "blue",   label: "ブルー",   bg: "bg-blue-100",   text: "text-blue-700" },
+      { id: "yellow", label: "イエロー", bg: "bg-yellow-100", text: "text-yellow-700" },
+      { id: "orange", label: "オレンジ", bg: "bg-orange-100", text: "text-orange-700" },
+      { id: "purple", label: "パープル", bg: "bg-purple-100", text: "text-purple-700" },
+      { id: "green",  label: "グリーン", bg: "bg-green-100",  text: "text-green-700" },
+      { id: "red",    label: "レッド",   bg: "bg-red-100",    text: "text-red-700" },
+      { id: "pink",   label: "ピンク",   bg: "bg-pink-100",   text: "text-pink-700" },
+      { id: "teal",   label: "ティール", bg: "bg-teal-100",   text: "text-teal-700" },
+      { id: "indigo", label: "インディゴ",bg:"bg-indigo-100", text: "text-indigo-700" },
+    ];
+
+    const DEFAULT_STAGES = [
+      { id: "submitted",  name: "書類選考中", color: "gray",   order: 0, isRejection: false },
+      { id: "doc_passed", name: "書類通過",   color: "blue",   order: 1, isRejection: false },
+      { id: "interview1", name: "一次面接",   color: "yellow", order: 2, isRejection: false },
+      { id: "interview2", name: "二次面接",   color: "orange", order: 3, isRejection: false },
+      { id: "final",      name: "最終面接",   color: "purple", order: 4, isRejection: false },
+      { id: "offer",      name: "内定",       color: "green",  order: 5, isRejection: false },
+      { id: "rejected",   name: "不採用",     color: "red",    order: 6, isRejection: true  },
+    ];
+
+    let stages = [];
+
+    function colorStyle(colorId) {
+      return COLORS.find(c => c.id === colorId) || COLORS[0];
+    }
+
+    function renderColorGuide() {
+      const el = document.getElementById("colorGuide");
+      el.innerHTML = COLORS.map(c =>
+        '<span class="' + c.bg + ' ' + c.text + ' text-xs font-medium px-2.5 py-1 rounded-full">' + c.label + '</span>'
+      ).join("");
+    }
+
+    function renderStageList() {
+      const list = document.getElementById("stageList");
+      if (stages.length === 0) {
+        list.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">ステージがありません。「追加」ボタンで作成してください。</div>';
+        return;
+      }
+      list.innerHTML = stages.map((s, i) => {
+        const c = colorStyle(s.color);
+        return '<div class="stage-row flex items-center gap-3 px-5 py-3.5" data-index="' + i + '">' +
+          '<div class="drag-handle text-gray-300 hover:text-gray-500 cursor-grab px-1"><i class="fas fa-grip-vertical"></i></div>' +
+          '<span class="' + c.bg + ' ' + c.text + ' text-xs font-bold px-2.5 py-1 rounded-full w-24 text-center truncate">' + escH(s.name) + '</span>' +
+          '<div class="flex-1 flex items-center gap-2 min-w-0">' +
+          '<input type="text" value="' + escH(s.name) + '" onchange="updateStage(' + i + ','name',this.value)"' +
+          ' class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-w-0">' +
+          '<select onchange="updateStage(' + i + ','color',this.value)" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200">' +
+          COLORS.map(c2 => '<option value="' + c2.id + '"' + (s.color === c2.id ? ' selected' : '') + '>' + c2.label + '</option>').join("") +
+          '</select>' +
+          '</div>' +
+          '<label class="flex items-center gap-1.5 text-xs text-gray-500 shrink-0 cursor-pointer">' +
+          '<input type="checkbox"' + (s.isRejection ? ' checked' : '') + ' onchange="updateStage(' + i + ','isRejection',this.checked)" class="rounded text-red-500 focus:ring-red-300">' +
+          '不採用</label>' +
+          '<button onclick="removeStage(' + i + ')" class="text-gray-300 hover:text-red-400 transition ml-1"><i class="fas fa-trash-alt text-xs"></i></button>' +
+          '</div>';
+      }).join("");
+
+      // Sortable
+      Sortable.create(list, {
+        handle: ".drag-handle",
+        animation: 150,
+        ghostClass: "sortable-ghost",
+        onEnd(evt) {
+          const moved = stages.splice(evt.oldIndex, 1)[0];
+          stages.splice(evt.newIndex, 0, moved);
+          stages.forEach((s, i) => s.order = i);
+          renderStageList();
+        }
+      });
+    }
+
+    function updateStage(i, key, val) {
+      stages[i][key] = val;
+      if (key !== "name") renderStageList();
+    }
+
+    function addStage() {
+      stages.push({ id: "stage_" + Date.now(), name: "新しいステージ", color: "gray", order: stages.length, isRejection: false });
+      renderStageList();
+    }
+
+    function removeStage(i) {
+      if (!confirm(stages[i].name + " を削除しますか？")) return;
+      stages.splice(i, 1);
+      stages.forEach((s, idx) => s.order = idx);
+      renderStageList();
+    }
+
+    function resetDefault() {
+      if (!confirm("デフォルトのステージ設定に戻しますか？現在の設定は失われます。")) return;
+      stages = JSON.parse(JSON.stringify(DEFAULT_STAGES));
+      renderStageList();
+    }
+
+    async function saveStages() {
+      try {
+        const res = await fetch("/api/pipeline/stages", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stages })
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          showAlert("保存しました！", "success");
+        } else {
+          showAlert(data.error || "保存に失敗しました", "error");
+        }
+      } catch (e) {
+        showAlert("通信エラーが発生しました", "error");
+      }
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById("alertBox");
+      el.textContent = msg;
+      el.className = "p-4 rounded-xl text-sm font-medium " + (type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800");
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 3000);
+    }
+
+    function escH(str) {
+      if (!str) return "";
+      return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    async function init() {
+      renderColorGuide();
+      const res = await fetch("/api/pipeline/stages");
+      stages = await res.json();
+      if (!Array.isArray(stages)) stages = JSON.parse(JSON.stringify(DEFAULT_STAGES));
+      renderStageList();
+    }
+
+    init();
+  </script>
+</body>
+</html>

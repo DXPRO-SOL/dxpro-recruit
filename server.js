@@ -25,6 +25,7 @@ const CareerApplication = require("./models/CareerApplication");
 const Contact = require("./models/Contact");
 const ChatMessage = require("./models/ChatMessage");
 const FileStore = require("./models/FileStore");
+const PipelineSetting = require("./models/PipelineSetting");
 require("dotenv").config();
 
 const app = express();
@@ -88,6 +89,7 @@ const protectedPages = [
   "/new.html",
   "/recruit.html",
   "/settings.html",
+  "/pipeline-settings.html",
   "/position-detail.html",
   "/position-detail2.html", 
   "/position-detail3.html",
@@ -853,6 +855,66 @@ app.post("/api/user/me", requireLogin, async (req, res) => {
 });
 
 // 제출 내역 조회
+// ================== パイプライン設定 API ==================
+
+const DEFAULT_STAGES = [
+  { id: "submitted",   name: "書類選考中", color: "gray",   order: 0, isRejection: false },
+  { id: "doc_passed",  name: "書類通過",   color: "blue",   order: 1, isRejection: false },
+  { id: "interview1",  name: "一次面接",   color: "yellow", order: 2, isRejection: false },
+  { id: "interview2",  name: "二次面接",   color: "orange", order: 3, isRejection: false },
+  { id: "final",       name: "最終面接",   color: "purple", order: 4, isRejection: false },
+  { id: "offer",       name: "内定",       color: "green",  order: 5, isRejection: false },
+  { id: "rejected",    name: "不採用",     color: "red",    order: 6, isRejection: true  },
+];
+
+// ステージ取得（全員）
+app.get("/api/pipeline/stages", async (req, res) => {
+  try {
+    let setting = await PipelineSetting.findOne();
+    if (!setting) {
+      setting = await PipelineSetting.create({ stages: DEFAULT_STAGES });
+    }
+    res.json(setting.stages);
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// ステージ更新（管理者のみ）
+app.put("/api/pipeline/stages", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  const user = await User.findById(req.session.userId);
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "権限がありません" });
+  try {
+    const { stages } = req.body;
+    if (!Array.isArray(stages)) return res.status(400).json({ error: "stagesが必要です" });
+    let setting = await PipelineSetting.findOne();
+    if (!setting) setting = new PipelineSetting();
+    setting.stages = stages;
+    await setting.save();
+    res.json({ status: "success", stages: setting.stages });
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// 応募ステージ更新（管理者のみ）
+app.patch("/api/application/:id/stage", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  const user = await User.findById(req.session.userId);
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "権限がありません" });
+  try {
+    const { stage } = req.body;
+    const { id } = req.params;
+    let updated = await NewgradApplication.findByIdAndUpdate(id, { status: stage }, { new: true });
+    if (!updated) updated = await CareerApplication.findByIdAndUpdate(id, { status: stage }, { new: true });
+    if (!updated) return res.status(404).json({ error: "応募が見つかりません" });
+    res.json({ status: "success", stage });
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
 app.get("/api/applications", requireLogin, async (req, res) => {
   try {
     const user = await User.findById(req.session.userId);
