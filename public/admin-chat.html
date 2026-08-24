@@ -94,31 +94,53 @@
     }
 
     async function loadRooms() {
-      const res = await fetch("/api/chat-rooms");
-      const rooms = await res.json();
       const list = document.getElementById("roomList");
-      if (rooms.length === 0) {
-        list.innerHTML = `<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>チャットはまだありません</div>`;
+      list.innerHTML = `<div class="text-center text-gray-400 text-sm py-6">読み込み中...</div>`;
+
+      // チャット済みルームと全応募一覧を並行取得
+      const [roomsRes, appsRes] = await Promise.all([
+        fetch("/api/chat-rooms"),
+        fetch("/api/admin/all-applications")
+      ]);
+      const rooms = await roomsRes.json();
+      const allApps = await appsRes.json();
+
+      // チャット済みルームのIDマップ
+      const roomMap = {};
+      rooms.forEach(r => { roomMap[r._id] = r; });
+
+      if (allApps.length === 0) {
+        list.innerHTML = `<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>応募がありません</div>`;
         return;
       }
-      list.innerHTML = rooms.map(r => `
-        <div class="room-item px-4 py-3.5 cursor-pointer hover:bg-blue-50 transition-colors ${r.unread > 0 ? 'bg-blue-50/50' : ''}"
-          onclick="joinRoom('${r._id}','${r.applicationType}')" data-id="${r._id}">
+
+      list.innerHTML = allApps.map(app => {
+        const room = roomMap[app._id];
+        const unread = room?.unread || 0;
+        const lastMsg = room?.lastMessage || null;
+        const lastTime = room?.lastTime || null;
+        const name = `${app.lastName || ""}${app.firstName || ""}`;
+        const pos = positionMap[app.position] || app.position || "";
+        const date = new Date(app.createdAt).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
+        return `
+        <div class="room-item px-4 py-3.5 cursor-pointer hover:bg-blue-50 transition-colors ${unread > 0 ? 'bg-blue-50/50' : ''}"
+          onclick="joinRoom('${app._id}','${app.type}')" data-id="${app._id}">
           <div class="flex items-start gap-3">
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 mt-0.5">
               <i class="fas fa-user text-white text-xs"></i>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between mb-0.5">
-                <span class="text-xs font-semibold text-gray-700">${typeMap[r.applicationType] || r.applicationType}</span>
-                <span class="text-xs text-gray-400">${r.lastTime ? new Date(r.lastTime).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"}) : ""}</span>
+                <span class="text-xs font-semibold text-gray-700">${typeMap[app.type]} - ${name || app.email || ""}</span>
+                <span class="text-xs text-gray-400">${date}</span>
               </div>
-              <p class="text-xs text-gray-400 truncate font-mono">${r._id}</p>
-              <p class="text-sm text-gray-600 truncate mt-1">${r.lastMessage || "メッセージなし"}</p>
-              ${r.unread > 0 ? `<span class="inline-block mt-1 bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">${r.unread}件未読</span>` : ""}
+              <p class="text-xs text-gray-500 truncate">${pos}</p>
+              <p class="text-sm text-gray-500 truncate mt-0.5">${lastMsg || '<span class="text-gray-300">未チャット</span>'}</p>
+              ${unread > 0 ? `<span class="inline-block mt-1 bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">${unread}件未読</span>` : ""}
             </div>
           </div>
-        </div>`).join("");
+        </div>`;
+      }).join("");
     }
 
     async function joinRoom(applicationId, applicationType) {
@@ -130,8 +152,11 @@
       document.querySelectorAll(".room-item").forEach(el => el.classList.remove("bg-blue-100"));
       document.querySelector(`.room-item[data-id="${applicationId}"]`)?.classList.add("bg-blue-100");
 
-      document.getElementById("chatTitle").textContent = `${typeMap[applicationType] || applicationType} 応募者`;
-      document.getElementById("chatSubtitle").textContent = `応募ID: ${applicationId}`;
+      const item = document.querySelector(`.room-item[data-id="${applicationId}"]`);
+      const nameEl = item?.querySelector(".font-semibold");
+      const posEl = item?.querySelector(".text-gray-500.truncate");
+      document.getElementById("chatTitle").textContent = nameEl?.textContent || `${typeMap[applicationType]} 応募者`;
+      document.getElementById("chatSubtitle").textContent = posEl?.textContent || `応募ID: ${applicationId}`;
       document.getElementById("msgInput").disabled = false;
       document.getElementById("sendBtn").disabled = false;
 
@@ -148,7 +173,6 @@
       area.scrollTop = area.scrollHeight;
 
       // 未読バッジを消す
-      const item = document.querySelector(`.room-item[data-id="${applicationId}"]`);
       if (item) {
         const badge = item.querySelector(".bg-blue-600");
         if (badge) badge.remove();

@@ -816,15 +816,17 @@ app.post("/api/user/me", requireLogin, async (req, res) => {
 // 제출 내역 조회
 app.get("/api/applications", requireLogin, async (req, res) => {
   try {
-    // 新卒応募取得
-    const newgradApps = (await NewgradApplication.find({ userId: req.session.userId }).lean())
-      .map(app => ({ ...app, type: "新卒" })); // ← type を追加
+    const user = await User.findById(req.session.userId);
+    const isAdmin = user && user.role === "admin";
 
-    // キャリア応募取得
-    const careerApps = (await CareerApplication.find({ userId: req.session.userId }).lean())
-      .map(app => ({ ...app, type: "中途" })); // ← type を追加
+    // 管理者は全件、一般ユーザーは自分の応募のみ
+    const query = isAdmin ? {} : { userId: req.session.userId };
 
-    // 日付順に統合
+    const newgradApps = (await NewgradApplication.find(query).lean())
+      .map(app => ({ ...app, type: "新卒" }));
+    const careerApps = (await CareerApplication.find(query).lean())
+      .map(app => ({ ...app, type: "中途" }));
+
     const allApps = [...newgradApps, ...careerApps].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({ status: "success", applications: allApps });
@@ -955,6 +957,7 @@ app.get("/api/chat-rooms", async (req, res) => {
   const user = await User.findById(req.session.userId);
   if (!user || user.role !== "admin") return res.status(403).json({ error: "権限がありません" });
   try {
+    // チャット済み応募のルーム一覧
     const rooms = await ChatMessage.aggregate([
       { $sort: { createdAt: -1 } },
       { $group: {
@@ -968,6 +971,23 @@ app.get("/api/chat-rooms", async (req, res) => {
       { $sort: { lastTime: -1 } }
     ]);
     res.json(rooms);
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// 管理者: 全応募一覧（チャット開始用）
+app.get("/api/admin/all-applications", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  const user = await User.findById(req.session.userId);
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "権限がありません" });
+  try {
+    const newgradApps = (await NewgradApplication.find({}).select("_id position lastName firstName email createdAt userId").lean())
+      .map(a => ({ ...a, type: "newgrad" }));
+    const careerApps = (await CareerApplication.find({}).select("_id position lastName firstName email createdAt userId").lean())
+      .map(a => ({ ...a, type: "career" }));
+    const all = [...newgradApps, ...careerApps].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(all);
   } catch (e) {
     res.status(500).json({ error: "エラーが発生しました" });
   }
