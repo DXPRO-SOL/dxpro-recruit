@@ -113,21 +113,30 @@
       }
       list.innerHTML = stages.map((s, i) => {
         const c = colorStyle(s.color);
-        return '<div class="stage-row flex items-center gap-3 px-5 py-3.5" data-index="' + i + '">' +
-          '<div class="drag-handle text-gray-300 hover:text-gray-500 cursor-grab px-1"><i class="fas fa-grip-vertical"></i></div>' +
-          '<span class="' + c.bg + ' ' + c.text + ' text-xs font-bold px-2.5 py-1 rounded-full w-24 text-center truncate">' + escH(s.name) + '</span>' +
-          '<div class="flex-1 flex items-center gap-2 min-w-0">' +
-          '<input type="text" value="' + escH(s.name) + '" onchange="updateStage(' + i + ','name',this.value)"' +
-          ' class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-w-0">' +
-          '<select onchange="updateStage(' + i + ','color',this.value)" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200">' +
-          COLORS.map(c2 => '<option value="' + c2.id + '"' + (s.color === c2.id ? ' selected' : '') + '>' + c2.label + '</option>').join("") +
-          '</select>' +
-          '</div>' +
-          '<label class="flex items-center gap-1.5 text-xs text-gray-500 shrink-0 cursor-pointer">' +
-          '<input type="checkbox"' + (s.isRejection ? ' checked' : '') + ' onchange="updateStage(' + i + ','isRejection',this.checked)" class="rounded text-red-500 focus:ring-red-300">' +
-          '不採用</label>' +
-          '<button onclick="removeStage(' + i + ')" class="text-gray-300 hover:text-red-400 transition ml-1"><i class="fas fa-trash-alt text-xs"></i></button>' +
-          '</div>';
+        const colorOptions = COLORS.map(c2 =>
+          `<option value="${c2.id}"${s.color === c2.id ? " selected" : ""}>${c2.label}</option>`
+        ).join("");
+        return `
+        <div class="stage-row flex items-center gap-3 px-5 py-3.5" data-index="${i}">
+          <div class="drag-handle text-gray-300 hover:text-gray-500 cursor-grab px-1"><i class="fas fa-grip-vertical"></i></div>
+          <span class="${c.bg} ${c.text} text-xs font-bold px-2.5 py-1 rounded-full w-24 text-center truncate">${escH(s.name)}</span>
+          <div class="flex-1 flex items-center gap-2 min-w-0">
+            <input type="text" value="${escH(s.name)}" oninput="stages[${i}].name=this.value"
+              class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-w-0">
+            <select onchange="updateColor(${i},this.value)"
+              class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200">
+              ${colorOptions}
+            </select>
+          </div>
+          <label class="flex items-center gap-1.5 text-xs text-gray-500 shrink-0 cursor-pointer">
+            <input type="checkbox" ${s.isRejection ? "checked" : ""} onchange="stages[${i}].isRejection=this.checked"
+              class="rounded text-red-500 focus:ring-red-300">
+            不採用
+          </label>
+          <button onclick="removeStage(${i})" class="text-gray-300 hover:text-red-400 transition ml-1">
+            <i class="fas fa-trash-alt text-xs"></i>
+          </button>
+        </div>`;
       }).join("");
 
       // Sortable
@@ -144,9 +153,9 @@
       });
     }
 
-    function updateStage(i, key, val) {
-      stages[i][key] = val;
-      if (key !== "name") renderStageList();
+    function updateColor(i, val) {
+      stages[i].color = val;
+      renderStageList();
     }
 
     function addStage() {
