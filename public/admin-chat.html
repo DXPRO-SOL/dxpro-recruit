@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>採用チャット管理 - DXPRO SOLUTIONS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- 左: チャットルーム一覧 -->
+    <aside class="w-80 bg-white border-r border-gray-100 flex flex-col">
+      <div class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-5 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="font-bold text-base">採用チャット</h1>
+            <p class="text-white/60 text-xs mt-0.5">応募者との連絡</p>
+          </div>
+          <a href="/index.html" class="text-white/60 hover:text-white text-xs">
+            <i class="fas fa-home"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-b border-gray-100">
+        <input id="searchInput" type="text" placeholder="応募IDで検索..." 
+          class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
+      </div>
+
+      <div id="roomList" class="flex-1 overflow-y-auto divide-y divide-gray-50">
+        <div class="text-center text-gray-400 text-sm py-10">読み込み中...</div>
+      </div>
+    </aside>
+
+    <!-- 右: チャット画面 -->
+    <div class="flex-1 flex flex-col">
+
+      <!-- チャットヘッダー -->
+      <div id="chatHeader" class="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-3 shadow-sm">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+          <i class="fas fa-user text-blue-700 text-sm"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 text-sm" id="chatTitle">応募を選択してください</p>
+          <p class="text-gray-400 text-xs" id="chatSubtitle">左のリストから応募者を選んでください</p>
+        </div>
+      </div>
+
+      <!-- メッセージエリア -->
+      <main id="messagesArea" class="flex-1 overflow-y-auto px-6 py-5 space-y-3 bg-gray-50">
+        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+          <i class="fas fa-comments text-6xl mb-4 text-gray-300"></i>
+          <p class="text-sm">応募者を選択してチャットを開始</p>
+        </div>
+      </main>
+
+      <!-- 入力エリア -->
+      <div class="bg-white border-t border-gray-100 px-6 py-4">
+        <div class="flex gap-3">
+          <input id="msgInput" type="text" placeholder="返信メッセージを入力..." disabled
+            class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50">
+          <button onclick="sendMessage()" id="sendBtn" disabled
+            class="bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-blue-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2">
+            <i class="fas fa-paper-plane"></i> 送信
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let me = null;
+    let currentRoom = null;
+    let currentType = null;
+    const positionMap = {
+      frontend: "フロントエンドエンジニア", backend: "バックエンドエンジニア",
+      designer: "UIデザイナー", pm: "プロジェクトマネージャー",
+      consultant: "ITコンサルタント", qaengineer: "QAエンジニア"
+    };
+    const typeMap = { newgrad: "新卒", career: "中途" };
+
+    async function init() {
+      const meRes = await fetch("/api/me");
+      if (!meRes.ok) { location.href = "/login.html"; return; }
+      me = await meRes.json();
+      if (me.role !== "admin") { location.href = "/index.html"; return; }
+      await loadRooms();
+    }
+
+    async function loadRooms() {
+      const res = await fetch("/api/chat-rooms");
+      const rooms = await res.json();
+      const list = document.getElementById("roomList");
+      if (rooms.length === 0) {
+        list.innerHTML = `<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>チャットはまだありません</div>`;
+        return;
+      }
+      list.innerHTML = rooms.map(r => `
+        <div class="room-item px-4 py-3.5 cursor-pointer hover:bg-blue-50 transition-colors ${r.unread > 0 ? 'bg-blue-50/50' : ''}"
+          onclick="joinRoom('${r._id}','${r.applicationType}')" data-id="${r._id}">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-user text-white text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-0.5">
+                <span class="text-xs font-semibold text-gray-700">${typeMap[r.applicationType] || r.applicationType}</span>
+                <span class="text-xs text-gray-400">${r.lastTime ? new Date(r.lastTime).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"}) : ""}</span>
+              </div>
+              <p class="text-xs text-gray-400 truncate font-mono">${r._id}</p>
+              <p class="text-sm text-gray-600 truncate mt-1">${r.lastMessage || "メッセージなし"}</p>
+              ${r.unread > 0 ? `<span class="inline-block mt-1 bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">${r.unread}件未読</span>` : ""}
+            </div>
+          </div>
+        </div>`).join("");
+    }
+
+    async function joinRoom(applicationId, applicationType) {
+      if (currentRoom) socket.emit("leaveRoom", currentRoom);
+      currentRoom = applicationId;
+      currentType = applicationType;
+
+      // アクティブ強調
+      document.querySelectorAll(".room-item").forEach(el => el.classList.remove("bg-blue-100"));
+      document.querySelector(`.room-item[data-id="${applicationId}"]`)?.classList.add("bg-blue-100");
+
+      document.getElementById("chatTitle").textContent = `${typeMap[applicationType] || applicationType} 応募者`;
+      document.getElementById("chatSubtitle").textContent = `応募ID: ${applicationId}`;
+      document.getElementById("msgInput").disabled = false;
+      document.getElementById("sendBtn").disabled = false;
+
+      socket.emit("joinRoom", applicationId);
+
+      const res = await fetch(`/api/chat/${applicationId}`);
+      const messages = await res.json();
+      const area = document.getElementById("messagesArea");
+      area.innerHTML = "";
+      if (messages.length === 0) {
+        area.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400"><i class="fas fa-comments text-5xl mb-3 text-gray-300"></i><p class="text-sm">まだメッセージはありません。最初のメッセージを送りましょう。</p></div>`;
+      }
+      messages.forEach(m => appendMessage(m));
+      area.scrollTop = area.scrollHeight;
+
+      // 未読バッジを消す
+      const item = document.querySelector(`.room-item[data-id="${applicationId}"]`);
+      if (item) {
+        const badge = item.querySelector(".bg-blue-600");
+        if (badge) badge.remove();
+        item.classList.remove("bg-blue-50/50");
+      }
+    }
+
+    function appendMessage(msg) {
+      const area = document.getElementById("messagesArea");
+      const isMine = msg.senderRole === "admin";
+      const time = new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+
+      const wrap = document.createElement("div");
+      wrap.className = `flex ${isMine ? "justify-end" : "justify-start"} items-end gap-2`;
+
+      if (!isMine) {
+        wrap.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+            <i class="fas fa-user text-gray-500 text-xs"></i>
+          </div>
+          <div class="max-w-[65%]">
+            <p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
+            <div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">${escapeHtml(msg.message)}</div>
+            <p class="text-xs text-gray-300 mt-1">${time}</p>
+          </div>`;
+      } else {
+        wrap.innerHTML = `
+          <div class="max-w-[65%] text-right">
+            <p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
+            <div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block">${escapeHtml(msg.message)}</div>
+            <p class="text-xs text-gray-300 mt-1">${time}</p>
+          </div>`;
+      }
+      area.appendChild(wrap);
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
+      if (!text || !currentRoom) return;
+      socket.emit("sendMessage", {
+        applicationId: currentRoom,
+        applicationType: currentType,
+        senderId: me._id,
+        senderName: `${me.lastName}${me.firstName}`,
+        senderRole: "admin",
+        message: text
+      });
+      input.value = "";
+    }
+
+    socket.on("newMessage", (msg) => {
+      if (msg.applicationId === currentRoom) {
+        appendMessage(msg);
+        const area = document.getElementById("messagesArea");
+        area.scrollTop = area.scrollHeight;
+      } else {
+        // 別ルームに未読バッジ追加
+        loadRooms();
+      }
+    });
+
+    document.getElementById("msgInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll(".room-item").forEach(el => {
+        el.style.display = el.dataset.id.includes(q) ? "" : "none";
+      });
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
@@ -17,9 +19,12 @@ const Application = require("./models/Application");
 const NewgradApplication = require("./models/NewgradApplication");
 const CareerApplication = require("./models/CareerApplication");
 const Contact = require("./models/Contact");
+const ChatMessage = require("./models/ChatMessage");
 require("dotenv").config();
 
 const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer);
 
 // MongoDB 연결
 mongoose.connect("mongodb+srv://dxprosol:kim650323@dxpro.ealx5.mongodb.net/dxpro-recruit");
@@ -75,6 +80,8 @@ const protectedPages = [
   "/position-detail2.html", 
   "/position-detail3.html",
   "/position-detail4.html",
+  "/chat.html",
+  "/admin-chat.html",
   "/",
   ""
 ];
@@ -917,6 +924,106 @@ app.post("/contact", async (req, res) => {
   }
 });
 
-// 포트 실행
+// ================== チャット API ==================
+
+// 応募IDのチャット履歴取得
+app.get("/api/chat/:applicationId", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const messages = await ChatMessage.find({ applicationId: req.params.applicationId })
+      .sort({ createdAt: 1 });
+    await ChatMessage.updateMany(
+      { applicationId: req.params.applicationId, senderId: { $ne: req.session.userId }, read: false },
+      { read: true }
+    );
+    res.json(messages);
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// 管理者: チャット一覧
+app.get("/api/chat-rooms", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  const user = await User.findById(req.session.userId);
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "権限がありません" });
+  try {
+    const rooms = await ChatMessage.aggregate([
+      { $sort: { createdAt: -1 } },
+      { $group: {
+        _id: "$applicationId",
+        applicationType: { $first: "$applicationType" },
+        lastMessage: { $first: "$message" },
+        lastSenderName: { $first: "$senderName" },
+        lastTime: { $first: "$createdAt" },
+        unread: { $sum: { $cond: [{ $and: [{ $eq: ["$senderRole","user"] }, { $eq: ["$read", false] }] }, 1, 0] } }
+      }},
+      { $sort: { lastTime: -1 } }
+    ]);
+    res.json(rooms);
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// 応募者: 自分の応募チャット一覧
+app.get("/api/my-chat-rooms", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const newgradApps = await NewgradApplication.find({ userId: req.session.userId }).select("_id position createdAt");
+    const careerApps = await CareerApplication.find({ userId: req.session.userId }).select("_id position createdAt");
+    const allApps = [
+      ...newgradApps.map(a => ({ ...a.toObject(), type: "newgrad" })),
+      ...careerApps.map(a => ({ ...a.toObject(), type: "career" }))
+    ];
+    const result = await Promise.all(allApps.map(async (app) => {
+      const last = await ChatMessage.findOne({ applicationId: app._id.toString() }).sort({ createdAt: -1 });
+      const unread = await ChatMessage.countDocuments({ applicationId: app._id.toString(), senderRole: "admin", read: false });
+      return { ...app, lastMessage: last?.message || null, lastTime: last?.createdAt || null, unread };
+    }));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// セッション情報をクライアントに返すAPI
+app.get("/api/me", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "未ログイン" });
+  const user = await User.findById(req.session.userId).select("_id username role lastName firstName");
+  res.json(user);
+});
+
+// Socket.io チャット
+io.on("connection", (socket) => {
+  socket.on("joinRoom", (applicationId) => {
+    socket.join(applicationId);
+  });
+  socket.on("sendMessage", async (data) => {
+    try {
+      const msg = new ChatMessage({
+        applicationId: data.applicationId,
+        applicationType: data.applicationType,
+        senderId: data.senderId,
+        senderName: data.senderName,
+        senderRole: data.senderRole,
+        message: data.message
+      });
+      await msg.save();
+      io.to(data.applicationId).emit("newMessage", {
+        _id: msg._id,
+        applicationId: msg.applicationId,
+        senderName: msg.senderName,
+        senderRole: msg.senderRole,
+        message: msg.message,
+        createdAt: msg.createdAt
+      });
+    } catch (e) {
+      console.error("チャット保存エラー:", e);
+    }
+  });
+});
+
+// ポート実行
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+httpServer.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
