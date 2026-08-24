@@ -9,58 +9,95 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
+    body { font-family: 'Noto Sans JP', sans-serif; }
     .msg-actions { display: none; }
     .msg-wrap:hover .msg-actions { display: flex; }
+    .room-item.active { background: #eff6ff; border-left: 3px solid #1d4ed8; }
+    .room-item { border-left: 3px solid transparent; transition: background 0.15s; }
+    #sidebar { transition: transform 0.3s ease; }
+    @media (max-width: 767px) {
+      #sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; width: 85vw; transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+    }
   </style>
 </head>
-<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen flex flex-col">
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
 
-  <header class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-6 py-4 flex items-center gap-4 shadow-lg">
-    <a href="application-status.html" class="text-white/70 hover:text-white transition-colors">
-      <i class="fas fa-arrow-left text-lg"></i>
-    </a>
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full bg-blue-400/30 flex items-center justify-center">
-        <i class="fas fa-user-tie text-sm text-blue-200"></i>
+  <div id="overlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden"></div>
+
+  <header class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-4 py-3 flex items-center gap-3 shadow-lg shrink-0 z-20">
+    <button onclick="toggleSidebar()" class="md:hidden text-white/80 hover:text-white p-1">
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+    <div class="flex items-center gap-3 flex-1 min-w-0">
+      <div class="w-8 h-8 rounded-full bg-blue-400/30 flex items-center justify-center shrink-0">
+        <i class="fas fa-user-tie text-xs text-blue-200"></i>
       </div>
-      <div>
+      <div class="min-w-0">
         <p class="font-semibold text-sm leading-tight">採用担当者</p>
-        <p class="text-white/60 text-xs" id="roomInfo">応募を選択してください</p>
+        <p class="text-white/60 text-xs truncate" id="roomInfo">応募を選択してください</p>
       </div>
     </div>
+    <a href="application-status.html" class="text-white/70 hover:text-white transition-colors flex items-center gap-2 text-sm">
+      <i class="fas fa-arrow-left"></i><span class="hidden md:inline">戻る</span>
+    </a>
   </header>
 
-  <div id="roomSelectorWrap" class="bg-white border-b border-gray-100 px-4 py-2 hidden">
-    <select id="roomSelector" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
-      <option value="">応募を選択...</option>
-    </select>
-  </div>
+  <div class="flex flex-1 overflow-hidden">
 
-  <main id="messagesArea" class="flex-1 overflow-y-auto px-4 py-5 space-y-3 pb-28">
-    <div id="emptyState" class="flex flex-col items-center justify-center h-64 text-gray-400 py-16">
-      <i class="fas fa-comments text-5xl mb-4 text-gray-300"></i>
-      <p class="text-sm">応募を選択してチャットを開始してください</p>
-    </div>
-  </main>
+    <!-- サイドバー -->
+    <aside id="sidebar" class="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 shadow-sm">
+      <div class="p-3 border-b border-gray-100 space-y-2 bg-gray-50">
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input id="searchInput" type="text" placeholder="名前・ポジションで検索..."
+            class="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+            oninput="filterRooms()">
+        </div>
+        <div class="flex gap-1.5">
+          <button onclick="setTypeFilter('all')" data-filter="all"
+            class="filter-btn flex-1 text-xs py-1.5 rounded-lg font-medium bg-blue-700 text-white transition-colors">すべて</button>
+          <button onclick="setTypeFilter('newgrad')" data-filter="newgrad"
+            class="filter-btn flex-1 text-xs py-1.5 rounded-lg font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">新卒</button>
+          <button onclick="setTypeFilter('career')" data-filter="career"
+            class="filter-btn flex-1 text-xs py-1.5 rounded-lg font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">中途</button>
+        </div>
+      </div>
+      <div id="roomList" class="flex-1 overflow-y-auto">
+        <div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-spinner fa-spin text-xl block mb-2"></i>読み込み中...</div>
+      </div>
+    </aside>
 
-  <div id="filePreviewBar" class="hidden fixed bottom-16 left-0 right-0 bg-blue-50 border-t border-blue-100 px-4 py-2 flex items-center gap-3 text-sm text-blue-700 z-10">
-    <i class="fas fa-paperclip"></i>
-    <span id="filePreviewName" class="flex-1 truncate"></span>
-    <button onclick="clearFile()" class="text-blue-400 hover:text-blue-700"><i class="fas fa-times"></i></button>
-  </div>
+    <!-- チャット -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+      <main id="messagesArea" class="flex-1 overflow-y-auto px-4 py-5 space-y-3">
+        <div class="flex flex-col items-center justify-center h-full text-gray-400 py-16">
+          <i class="fas fa-comments text-5xl mb-4 text-gray-300"></i>
+          <p class="text-sm font-medium">応募を選択してチャット開始</p>
+          <p class="text-xs mt-1 text-gray-300">左のリストから応募者を選んでください</p>
+        </div>
+      </main>
 
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 shadow-lg z-10">
-    <div class="flex gap-2 max-w-3xl mx-auto items-center">
-      <label for="fileInput" class="cursor-pointer text-gray-400 hover:text-blue-600 transition-colors px-1" title="ファイルを添付">
-        <i class="fas fa-paperclip text-lg"></i>
-      </label>
-      <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
-      <input id="msgInput" type="text" placeholder="メッセージを入力..." disabled
-        class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-400">
-      <button id="sendBtn" onclick="sendMessage()" disabled
-        class="bg-blue-700 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-        <i class="fas fa-paper-plane"></i>
-      </button>
+      <div id="filePreviewBar" class="hidden bg-blue-50 border-t border-blue-100 px-4 py-2 flex items-center gap-3 text-sm text-blue-700">
+        <i class="fas fa-paperclip"></i>
+        <span id="filePreviewName" class="flex-1 truncate"></span>
+        <button onclick="clearFile()" class="text-blue-400 hover:text-blue-700"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="bg-white border-t border-gray-100 px-4 py-3 shadow-sm shrink-0">
+        <div class="flex gap-2 items-center max-w-4xl mx-auto">
+          <label for="fileInput" class="cursor-pointer text-gray-400 hover:text-blue-600 transition-colors px-1" title="ファイルを添付">
+            <i class="fas fa-paperclip text-lg"></i>
+          </label>
+          <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
+          <input id="msgInput" type="text" placeholder="メッセージを入力..." disabled
+            class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-400">
+          <button id="sendBtn" onclick="sendMessage()" disabled
+            class="bg-blue-700 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -78,8 +115,46 @@
   <script>
     const socket = io();
     let me = null, currentRoom = null, currentType = null, pendingFile = null, editingMessageId = null;
+    let allRooms = [], currentFilter = "all";
+
     const positionMap = { frontend:"フロントエンドエンジニア", backend:"バックエンドエンジニア", designer:"UIデザイナー", pm:"プロジェクトマネージャー", consultant:"ITコンサルタント", qaengineer:"QAエンジニア" };
-    const typeMap = { newgrad:"新卒採用", career:"中途採用" };
+    const typeMap = { newgrad:"新卒", career:"中途" };
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("hidden");
+    }
+    function closeSidebar() {
+      document.getElementById("sidebar").classList.remove("open");
+      document.getElementById("overlay").classList.add("hidden");
+    }
+
+    function setTypeFilter(type) {
+      currentFilter = type;
+      document.querySelectorAll(".filter-btn").forEach(btn => {
+        const active = btn.dataset.filter === type;
+        btn.className = "filter-btn flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors " +
+          (active ? "bg-blue-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50");
+      });
+      filterRooms();
+    }
+
+    function filterRooms() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const list = document.getElementById("roomList");
+      let visible = 0;
+      list.querySelectorAll(".room-item").forEach(item => {
+        const matchType = currentFilter === "all" || item.dataset.type === currentFilter;
+        const matchSearch = !q || (item.dataset.search || "").includes(q);
+        item.style.display = (matchType && matchSearch) ? "" : "none";
+        if (matchType && matchSearch) visible++;
+      });
+      const noResult = list.querySelector(".no-result");
+      if (visible === 0) {
+        if (!noResult) list.insertAdjacentHTML("beforeend",
+          '<div class="no-result text-center text-gray-400 text-sm py-8"><i class="fas fa-search text-xl block mb-2 text-gray-300"></i>該当する応募がありません</div>');
+      } else if (noResult) noResult.remove();
+    }
 
     async function init() {
       const meRes = await fetch("/api/me");
@@ -88,44 +163,88 @@
       const params = new URLSearchParams(location.search);
       const directId = params.get("applicationId");
       const directType = params.get("type");
+
       const roomsRes = await fetch("/api/my-chat-rooms");
-      const rooms = await roomsRes.json();
-      const selector = document.getElementById("roomSelector");
-      rooms.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r._id; opt.dataset.type = r.type;
-        const pos = positionMap[r.position] || r.position;
-        const date = new Date(r.createdAt).toLocaleDateString("ja-JP");
-        const name = (r.lastName || r.firstName) ? ` - ${r.lastName || ""}${r.firstName || ""}` : "";
-        opt.textContent = `${typeMap[r.type]}${name} - ${pos} (${date})${r.unread > 0 ? ` 【未読${r.unread}件】` : ""}`;
-        selector.appendChild(opt);
-      });
-      if (rooms.length > 1 || !directId) document.getElementById("roomSelectorWrap").classList.remove("hidden");
-      selector.addEventListener("change", () => { const opt = selector.options[selector.selectedIndex]; if (opt.value) joinRoom(opt.value, opt.dataset.type); });
-      if (directId && directType) { joinRoom(directId, directType); selector.value = directId; }
-      else if (rooms.length === 1) { joinRoom(rooms[0]._id, rooms[0].type); selector.value = rooms[0]._id; }
+      allRooms = await roomsRes.json();
+      if (!Array.isArray(allRooms)) allRooms = [];
+
+      renderRoomList(allRooms);
+
+      if (directId && directType) joinRoom(directId, directType);
+      else if (allRooms.length === 1) joinRoom(allRooms[0]._id, allRooms[0].type);
+    }
+
+    function renderRoomList(rooms) {
+      const list = document.getElementById("roomList");
+      if (rooms.length === 0) {
+        list.innerHTML = '<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>応募がありません</div>';
+        return;
+      }
+      list.innerHTML = rooms.map(r => {
+        const pos = positionMap[r.position] || r.position || "";
+        const name = (r.lastName || "") + (r.firstName || "");
+        const date = new Date(r.createdAt).toLocaleDateString("ja-JP", { month:"numeric", day:"numeric" });
+        const unread = r.unread || 0;
+        const lastMsg = r.lastMessage || "";
+        const searchStr = (name + " " + pos + " " + (typeMap[r.type] || "")).toLowerCase();
+        const initial = name ? name.charAt(0) : "?";
+        const typeBadge = r.type === "newgrad"
+          ? '<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-green-100 text-green-700">新卒</span>'
+          : '<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700">中途</span>';
+        return '<div class="room-item px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100"' +
+          ' data-id="' + r._id + '" data-type="' + r.type + '" data-search="' + searchStr + '"' +
+          ' onclick="joinRoom(\'' + r._id + '\',\'' + r.type + '\'); closeSidebar();">' +
+          '<div class="flex items-start gap-3">' +
+          '<div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 mt-0.5 text-white text-sm font-bold">' + initial + '</div>' +
+          '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center justify-between mb-0.5">' +
+          '<span class="text-sm font-semibold text-gray-800 truncate">' + (name || r.email || "名前なし") + '</span>' +
+          '<span class="text-xs text-gray-400 shrink-0 ml-2">' + date + '</span>' +
+          '</div>' +
+          '<div class="flex items-center gap-1.5 mb-1">' + typeBadge +
+          '<span class="text-xs text-gray-500 truncate">' + pos + '</span></div>' +
+          '<div class="flex items-center justify-between">' +
+          '<p class="text-xs text-gray-400 truncate flex-1">' + (lastMsg || '<span class="text-gray-300">未チャット</span>') + '</p>' +
+          (unread > 0 ? '<span class="ml-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 font-bold">' + unread + '</span>' : '') +
+          '</div></div></div></div>';
+      }).join("");
     }
 
     async function joinRoom(applicationId, applicationType) {
       if (currentRoom) socket.emit("leaveRoom", currentRoom);
       currentRoom = applicationId; currentType = applicationType;
-      document.getElementById("roomInfo").textContent = `${typeMap[applicationType] || applicationType} - ID: ...${applicationId.slice(-6)}`;
+
+      document.querySelectorAll(".room-item").forEach(el => el.classList.remove("active"));
+      const activeItem = document.querySelector('.room-item[data-id="' + applicationId + '"]');
+      if (activeItem) activeItem.classList.add("active");
+
+      const room = allRooms.find(r => r._id === applicationId);
+      const name = room ? ((room.lastName || "") + (room.firstName || "")) : "";
+      const pos = room ? (positionMap[room.position] || room.position || "") : "";
+      document.getElementById("roomInfo").textContent =
+        (typeMap[applicationType] || applicationType) + (name ? " - " + name : "") + (pos ? " / " + pos : "");
+
       document.getElementById("msgInput").disabled = false;
       document.getElementById("sendBtn").disabled = false;
       socket.emit("joinRoom", applicationId);
-      const res = await fetch(`/api/chat/${applicationId}`);
-      const messages = await res.json();
+
       const area = document.getElementById("messagesArea");
+      area.innerHTML = '<div class="text-center text-gray-300 text-sm py-10"><i class="fas fa-spinner fa-spin text-2xl block mb-2"></i></div>';
+
+      const res = await fetch("/api/chat/" + applicationId);
+      const messages = await res.json();
       area.innerHTML = "";
-      if (messages.length === 0) area.innerHTML = `<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-comments text-3xl mb-2 block text-gray-300"></i>まだメッセージはありません。最初のメッセージを送ってみましょう。</div>`;
+      if (messages.length === 0) {
+        area.innerHTML = '<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-comments text-3xl mb-2 block text-gray-300"></i>まだメッセージはありません</div>';
+      }
       messages.forEach(m => appendMessage(m));
       area.scrollTop = area.scrollHeight;
     }
 
     function renderFile(msg) {
       if (!msg.fileUrl) return "";
-      if (msg.fileType === "image") return `<a href="${msg.fileUrl}" target="_blank"><img src="${msg.fileUrl}" class="rounded-xl max-w-[220px] max-h-[180px] object-cover mt-2 border border-white/20" /></a>`;
-      return `<a href="${msg.fileUrl}" target="_blank" class="flex items-center gap-2 mt-2 underline text-sm opacity-80"><i class="fas fa-file-download"></i>${escapeHtml(msg.fileName || "添付ファイル")}</a>`;
+      if (msg.fileType === "image") return '<a href="' + msg.fileUrl + '" target="_blank"><img src="' + msg.fileUrl + '" class="rounded-xl max-w-[220px] max-h-[180px] object-cover mt-2 border border-white/20" /></a>';
+      return '<a href="' + msg.fileUrl + '" target="_blank" class="flex items-center gap-2 mt-2 underline text-sm opacity-80"><i class="fas fa-file-download"></i>' + escapeHtml(msg.fileName || "添付ファイル") + '</a>';
     }
 
     function appendMessage(msg) {
@@ -135,26 +254,26 @@
       const canDelete = isOwner || me.role === "admin";
       const time = new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit" });
       const wrap = document.createElement("div");
-      wrap.className = `msg-wrap flex ${isMySide ? "justify-end" : "justify-start"} items-end gap-2`;
+      wrap.className = "msg-wrap flex " + (isMySide ? "justify-end" : "justify-start") + " items-end gap-2";
       wrap.dataset.msgId = msg._id;
-      if (msg.deleted) { wrap.innerHTML = `<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>`; area.appendChild(wrap); return; }
+      if (msg.deleted) { wrap.innerHTML = '<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>'; area.appendChild(wrap); return; }
       const liked = me && (msg.likes || []).some(l => l.userId === me._id.toString());
       const likeCount = (msg.likes || []).length;
       const likeColor = liked ? "text-blue-500" : (isMySide ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-blue-500");
-      const likeBtn = `<button class="like-btn ${likeColor} text-xs flex items-center gap-1 transition-colors" onclick="toggleLike('${msg._id}')"><i class="fas fa-thumbs-up"></i>${likeCount > 0 ? `<span>${likeCount}</span>` : ""}</button>`;
-      const editBtn = (isOwner && msg.message && !msg.fileUrl) ? `<button class="text-gray-300 hover:text-blue-500 text-xs" onclick="openEdit('${msg._id}',this)" title="編集"><i class="fas fa-pen"></i></button>` : "";
-      const delBtn = canDelete ? `<button class="text-gray-300 hover:text-red-400 text-xs" onclick="deleteMessage('${msg._id}')" title="削除"><i class="fas fa-trash-alt"></i></button>` : "";
-      const textHtml = msg.message ? `<p class="break-words">${escapeHtml(msg.message)}</p>` : "";
-      const editedBadge = msg.edited ? `<span class="text-xs opacity-50 ml-1">(編集済)</span>` : "";
+      const likeBtn = '<button class="like-btn ' + likeColor + ' text-xs flex items-center gap-1 transition-colors" onclick="toggleLike(\'' + msg._id + '\')"><i class="fas fa-thumbs-up"></i>' + (likeCount > 0 ? '<span>' + likeCount + '</span>' : '') + '</button>';
+      const editBtn = (isOwner && msg.message && !msg.fileUrl) ? '<button class="text-gray-300 hover:text-blue-500 text-xs" onclick="openEdit(\'' + msg._id + '\',this)" title="編集"><i class="fas fa-pen"></i></button>' : "";
+      const delBtn = canDelete ? '<button class="text-gray-300 hover:text-red-400 text-xs" onclick="deleteMessage(\'' + msg._id + '\')" title="削除"><i class="fas fa-trash-alt"></i></button>' : "";
+      const textHtml = msg.message ? '<p class="break-words">' + escapeHtml(msg.message) + '</p>' : "";
+      const editedBadge = msg.edited ? '<span class="text-xs opacity-50 ml-1">(編集済)</span>' : "";
       if (!isMySide) {
-        wrap.innerHTML = `<div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shrink-0"><i class="fas fa-user-tie text-white text-xs"></i></div>
-          <div class="max-w-[75%]"><p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
-          <div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">${textHtml}${renderFile(msg)}${editedBadge}</div>
-          <div class="flex items-center gap-2 mt-1"><p class="text-xs text-gray-300">${time}</p>${likeBtn}<div class="msg-actions flex items-center gap-1.5">${editBtn}${delBtn}</div></div></div>`;
+        wrap.innerHTML = '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shrink-0"><i class="fas fa-user-tie text-white text-xs"></i></div>' +
+          '<div class="max-w-[75%]"><p class="text-xs text-gray-400 mb-1">' + msg.senderName + '</p>' +
+          '<div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">' + textHtml + renderFile(msg) + editedBadge + '</div>' +
+          '<div class="flex items-center gap-2 mt-1"><p class="text-xs text-gray-300">' + time + '</p>' + likeBtn + '<div class="msg-actions flex items-center gap-1.5">' + editBtn + delBtn + '</div></div></div>';
       } else {
-        wrap.innerHTML = `<div class="max-w-[75%] text-right">
-          <div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block text-left">${textHtml}${renderFile(msg)}${editedBadge}</div>
-          <div class="flex items-center justify-end gap-2 mt-1"><div class="msg-actions flex items-center gap-1.5">${editBtn}${delBtn}</div>${likeBtn}<p class="text-xs text-gray-300">${time}</p></div></div>`;
+        wrap.innerHTML = '<div class="max-w-[75%] text-right">' +
+          '<div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block text-left">' + textHtml + renderFile(msg) + editedBadge + '</div>' +
+          '<div class="flex items-center justify-end gap-2 mt-1"><div class="msg-actions flex items-center gap-1.5">' + editBtn + delBtn + '</div>' + likeBtn + '<p class="text-xs text-gray-300">' + time + '</p></div></div>';
       }
       area.appendChild(wrap);
     }
@@ -185,15 +304,14 @@
         clearFile();
       }
       socket.emit("sendMessage", {
-        applicationId: currentRoom,
-        applicationType: document.querySelector(`#roomSelector option[value="${currentRoom}"]`)?.dataset.type || currentType || "newgrad",
-        senderId: me._id, senderName: `${me.lastName||""}${me.firstName||me.username}`, senderRole: me.role,
+        applicationId: currentRoom, applicationType: currentType || "newgrad",
+        senderId: me._id, senderName: (me.lastName||"") + (me.firstName||me.username), senderRole: me.role,
         message: text, fileUrl, fileName, fileType
       });
       input.value = "";
     }
 
-    async function toggleLike(messageId) { await fetch(`/api/chat/message/${messageId}/like`, { method:"POST" }); }
+    async function toggleLike(messageId) { await fetch("/api/chat/message/" + messageId + "/like", { method:"POST" }); }
 
     function openEdit(messageId, btn) {
       editingMessageId = messageId;
@@ -205,12 +323,12 @@
     async function submitEdit() {
       const newText = document.getElementById("editInput").value.trim();
       if (!newText || !editingMessageId) return;
-      await fetch(`/api/chat/message/${editingMessageId}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ message:newText }) });
+      await fetch("/api/chat/message/" + editingMessageId, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ message:newText }) });
       closeEdit();
     }
     async function deleteMessage(messageId) {
       if (!confirm("このメッセージを削除しますか？")) return;
-      await fetch(`/api/chat/message/${messageId}`, { method:"DELETE" });
+      await fetch("/api/chat/message/" + messageId, { method:"DELETE" });
     }
 
     socket.on("newMessage", (msg) => {
@@ -220,21 +338,21 @@
       appendMessage(msg); area.scrollTop = area.scrollHeight;
     });
     socket.on("messageLiked", ({ messageId, likes }) => {
-      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
+      const wrap = document.querySelector('.msg-wrap[data-msg-id="' + messageId + '"]'); if (!wrap) return;
       const liked = me && likes.some(l => l.userId === me._id.toString());
       const isMySide = wrap.classList.contains("justify-end");
       const color = liked ? "text-blue-500" : (isMySide ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-blue-500");
       const btn = wrap.querySelector(".like-btn");
-      if (btn) { btn.className = `like-btn ${color} text-xs flex items-center gap-1 transition-colors`; btn.innerHTML = `<i class="fas fa-thumbs-up"></i>${likes.length > 0 ? `<span>${likes.length}</span>` : ""}`; }
+      if (btn) { btn.className = "like-btn " + color + " text-xs flex items-center gap-1 transition-colors"; btn.innerHTML = "<i class='fas fa-thumbs-up'></i>" + (likes.length > 0 ? "<span>" + likes.length + "</span>" : ""); }
     });
     socket.on("messageEdited", ({ messageId, message }) => {
-      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
+      const wrap = document.querySelector('.msg-wrap[data-msg-id="' + messageId + '"]'); if (!wrap) return;
       const bubble = wrap.querySelector("p.break-words"); if (bubble) bubble.textContent = message;
-      if (!wrap.querySelector(".opacity-50")) { const d = wrap.querySelector(".bg-white,.bg-blue-700"); if (d) d.insertAdjacentHTML("beforeend", `<span class="text-xs opacity-50 ml-1">(編集済)</span>`); }
+      if (!wrap.querySelector(".opacity-50")) { const d = wrap.querySelector(".bg-white,.bg-blue-700"); if (d) d.insertAdjacentHTML("beforeend", '<span class="text-xs opacity-50 ml-1">(編集済)</span>'); }
     });
     socket.on("messageDeleted", ({ messageId }) => {
-      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
-      wrap.innerHTML = `<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>`;
+      const wrap = document.querySelector('.msg-wrap[data-msg-id="' + messageId + '"]'); if (!wrap) return;
+      wrap.innerHTML = '<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>';
     });
 
     document.getElementById("msgInput").addEventListener("keydown", (e) => { if (e.key==="Enter"&&!e.shiftKey) { e.preventDefault(); sendMessage(); } });
