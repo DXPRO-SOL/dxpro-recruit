@@ -31,9 +31,13 @@ const NewgradApplicationSchema = new mongoose.Schema({
   locationPreference: { type: String, enum: ["出社","リモート"] },
 
   // 添付資料
-  resume: { type: String }, // 파일 경로
-  portfolioFiles: [String], // 파일 경로 배열
+  resume: { type: String }, // 파일 경로 (旧)
+  portfolioFiles: [String], // 파일 경로 배열 (旧)
   portfolio: { type: String }, // GitHub / URL
+  // MongoDB保存ファイルID（新方式）
+  resumeFileId: { type: mongoose.Schema.Types.ObjectId, ref: "FileStore", default: null },
+  resumeFileName: { type: String },
+  portfolioFileIds: [{ fileId: { type: mongoose.Schema.Types.ObjectId, ref: "FileStore" }, fileName: String }],
 
   // 自己PR
   pr: { type: String },

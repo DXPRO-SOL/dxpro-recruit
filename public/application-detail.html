@@ -8,118 +8,195 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen p-6">
+<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen p-4 md:p-6">
 
-  <div class="max-w-5xl mx-auto mt-6 p-8 bg-white rounded-2xl border border-gray-100">
-    <div class="flex justify-between items-center mb-8">
-      <div class="flex items-center gap-3">
-        <span class="w-1.5 h-8 bg-blue-700 rounded-full"></span>
-        <h1 class="text-2xl font-bold text-gray-900">応募詳細</h1>
+  <div class="max-w-4xl mx-auto mt-4 md:mt-6">
+    <div class="bg-white rounded-2xl border border-gray-100 p-6 md:p-8">
+      <!-- ヘッダー -->
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center gap-3">
+          <span class="w-1.5 h-8 bg-blue-700 rounded-full"></span>
+          <h1 class="text-xl md:text-2xl font-bold text-gray-900">応募詳細</h1>
+        </div>
+        <a href="/application-status.html" class="border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium py-2 px-4 rounded-xl transition text-sm inline-flex items-center gap-1.5">
+          <i class="fas fa-arrow-left text-xs"></i>応募履歴へ戻る
+        </a>
       </div>
-      <a href="/application-status.html" class="border border-gray-200 hover:bg-gray-50 text-gray-600 font-semibold py-2.5 px-5 rounded-xl transition duration-200 inline-flex items-center gap-1.5">
-        <i class="fas fa-arrow-left text-xs"></i>応募履歴へ戻る
-      </a>
-    </div>
 
-    <div id="applicationDetail" class="space-y-5 text-gray-700">
-      <!-- 動的に応募情報をここに表示 -->
-      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">日付</strong> <span id="appDate">読み込み中...</span></p>
-      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">応募タイプ</strong> <span id="appType">読み込み中...</span></p>
-      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">名前</strong> <span id="appName">読み込み中...</span></p>
-      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">メール</strong> <span id="appEmail">読み込み中...</span></p>
-      <p class="flex flex-wrap gap-2"><strong class="text-gray-500 font-medium w-32 shrink-0">応募ポジション</strong> <span id="appPosition">読み込み中...</span></p>
-      <p class="flex flex-wrap gap-2 items-center"><strong class="text-gray-500 font-medium w-32 shrink-0">ステータス</strong> <span id="appStatus" class="inline-block py-1 px-3 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">読み込み中</span></p>
-      <div class="pt-2">
-        <p class="text-gray-500 font-medium mb-2">自己PR</p>
-        <div id="appPR" class="p-4 bg-gray-50 rounded-xl border border-gray-100 break-words whitespace-pre-wrap text-gray-700">長い文章でも折り返されます...</div>
-      </div>
-      <div>
-        <p class="text-gray-500 font-medium mb-2">志望動機</p>
-        <div id="appMotivation" class="p-4 bg-gray-50 rounded-xl border border-gray-100 break-words whitespace-pre-wrap text-gray-700">ここも同様です...</div>
-      </div>
-      <div>
-        <p class="text-gray-500 font-medium mb-2">人事担当者からの連絡</p>
-        <div id="appHRComment" class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">読み込み中...</div>
-      </div>
-      <div id="filesSection" class="hidden">
-        <p class="text-gray-500 font-medium mb-3">添付ファイル</p>
-        <div id="filesList" class="flex flex-wrap gap-3"></div>
+      <div id="content">
+        <div class="text-center text-gray-400 py-12"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
       </div>
     </div>
   </div>
 
-
   <script>
     const positionMap = {
-      frontend: "フロントエンド",
-      backend: "バックエンド",
-      designer: "UIデザイナー",
-      pm: "プロジェクトマネージャー",
-      consultant: "コンサルタント",
-      qaengineer: "QAエンジニア"
+      frontend: "フロントエンドエンジニア", backend: "バックエンドエンジニア",
+      designer: "UIデザイナー", pm: "プロジェクトマネージャー",
+      consultant: "ITコンサルタント", qaengineer: "QAエンジニア"
     };
 
-    function getStatusBadge(status) {
-      const base = "py-1 px-3 rounded-full text-sm font-semibold shadow-sm";
+    function badge(status) {
+      const base = "py-1 px-3 rounded-full text-sm font-semibold";
       switch(status) {
         case '承認済み': return `<span class="bg-green-100 text-green-800 ${base}">${status}</span>`;
         case '進行中': return `<span class="bg-yellow-100 text-yellow-800 ${base}">${status}</span>`;
         case '却下': return `<span class="bg-red-100 text-red-800 ${base}">${status}</span>`;
-        default: return `<span class="bg-gray-100 text-gray-800 ${base}">${status}</span>`;
+        default: return `<span class="bg-gray-100 text-gray-700 ${base}">${status || '送信済み'}</span>`;
       }
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-
-    async function loadApplication() {
-    try {
-        if (!id) throw new Error("IDが指定されていません");
-
-        const res = await fetch(`/api/application/${id}`);
-        const data = await res.json();
-
-        if (data.status === "success" && data.application) {
-        const app = data.application;
-        document.getElementById("appDate").textContent = new Date(app.createdAt).toLocaleDateString();
-        document.getElementById("appType").textContent = app.type || "不明";
-        document.getElementById("appName").textContent = `${app.lastName || ""} ${app.firstName || ""}`;
-        document.getElementById("appEmail").textContent = app.email || "";
-        document.getElementById("appPosition").textContent = positionMap[app.position] || app.position || "";
-        document.getElementById("appStatus").innerHTML = getStatusBadge(app.status || "送信済み");
-        document.getElementById("appPR").textContent = app.pr || "なし";
-        document.getElementById("appMotivation").textContent = app.motivation || "なし";
-        document.getElementById("appHRComment").textContent = app.hrComment || "なし";
-
-        // 添付ファイル表示
-        const fileEntries = [];
-        if (app.resume) fileEntries.push({ label: "履歴書", path: app.resume });
-        if (app.career) fileEntries.push({ label: "職務経歴書", path: app.career });
-        if (app.portfolioFiles && app.portfolioFiles.length > 0) {
-          app.portfolioFiles.forEach((p, i) => fileEntries.push({ label: `作品ファイル ${i + 1}`, path: p }));
-        }
-        if (fileEntries.length > 0) {
-          const icons = { "履歴書": "fa-file-pdf", "職務経歴書": "fa-file-alt" };
-          document.getElementById("filesSection").classList.remove("hidden");
-          document.getElementById("filesList").innerHTML = fileEntries.map(f => {
-            const url = "/" + f.path.replace(/\\/g, "/");
-            const icon = icons[f.label] || "fa-file";
-            return `<a href="${url}" target="_blank"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-medium">
-              <i class="fas ${icon}"></i>${f.label}
-            </a>`;
-          }).join("");
-        }
-        } else {
-        document.getElementById("applicationDetail").innerHTML = `<p class="text-center text-gray-500">応募情報が見つかりません</p>`;
-        }
-    } catch(err) {
-        console.error(err);
-        document.getElementById("applicationDetail").innerHTML = `<p class="text-center text-red-500">読み込み中にエラーが発生しました</p>`;
-    }
+    function row(label, value) {
+      if (!value && value !== 0) return "";
+      return `<div class="flex flex-wrap gap-2 py-3 border-b border-gray-50">
+        <span class="text-gray-400 font-medium text-sm w-36 shrink-0">${label}</span>
+        <span class="text-gray-800 text-sm flex-1">${value}</span>
+      </div>`;
     }
 
-    loadApplication();
+    function section(title, icon, content) {
+      if (!content.trim()) return "";
+      return `<div class="mb-6">
+        <h3 class="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">
+          <i class="fas ${icon} text-blue-400"></i>${title}
+        </h3>
+        <div class="bg-gray-50 rounded-xl divide-y divide-gray-100">${content}</div>
+      </div>`;
+    }
+
+    function textBlock(label, value) {
+      if (!value) return "";
+      return `<div class="mb-6">
+        <p class="text-sm font-bold text-gray-500 mb-2">${label}</p>
+        <div class="bg-gray-50 rounded-xl p-4 text-sm text-gray-800 whitespace-pre-wrap break-words leading-relaxed">${escapeHtml(value)}</div>
+      </div>`;
+    }
+
+    function fileButton(label, url, icon="fa-file-pdf") {
+      return `<a href="${url}" target="_blank"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-medium">
+        <i class="fas ${icon}"></i>${label}
+      </a>`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    async function load() {
+      const id = new URLSearchParams(location.search).get("id");
+      if (!id) { document.getElementById("content").innerHTML = `<p class="text-red-500 text-center">IDが指定されていません</p>`; return; }
+
+      const res = await fetch(`/api/application/${id}`);
+      const data = await res.json();
+      if (data.status !== "success") { document.getElementById("content").innerHTML = `<p class="text-red-500 text-center">応募情報が見つかりません</p>`; return; }
+
+      const a = data.application;
+      const isCareer = a.type === "中途";
+
+      // ステータス
+      const headerHtml = `
+        <div class="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-user text-blue-700"></i>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-gray-900 text-lg">${escapeHtml(a.lastName||"")} ${escapeHtml(a.firstName||"")}</p>
+            <p class="text-gray-400 text-sm">${escapeHtml(a.hurilastName||"")} ${escapeHtml(a.hurifirstName||"")}</p>
+          </div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">${a.type || "不明"}</span>
+            ${badge(a.status)}
+          </div>
+        </div>`;
+
+      // 基本情報
+      const basicHtml = section("基本情報", "fa-id-card", [
+        row("応募日", new Date(a.createdAt).toLocaleDateString("ja-JP")),
+        row("生年月日", a.birthdate ? new Date(a.birthdate).toLocaleDateString("ja-JP") : null),
+        row("性別", a.gender),
+        row("電話", a.email),
+        row("メール", a.email),
+        row("電話番号", a.phone),
+      ].join(""));
+
+      // 住所
+      let address = "";
+      if (a.noAddress) { address = "（記入なし）"; }
+      else if (a.prefecture || a.city || a.addressDetail) {
+        address = `〒${a.postalCode||""} ${a.prefecture||""}${a.city||""}${a.addressDetail||""}`;
+      }
+      const addressHtml = address ? section("住所", "fa-map-marker-alt", row("住所", address)) : "";
+
+      // 学歴
+      const eduHtml = section("学歴", "fa-graduation-cap", [
+        row("最終学歴", a.education),
+        row("専攻", a.major),
+        row("卒業予定", a.graduation),
+      ].join(""));
+
+      // 希望条件
+      const prefHtml = section("希望条件", "fa-briefcase", [
+        row("希望ポジション", positionMap[a.position] || a.position),
+        row("勤務形態", a.locationPreference),
+        ...(isCareer ? [row("希望年収", a.gold)] : []),
+      ].join(""));
+
+      // 職歴（中途のみ）
+      let careerHtml = "";
+      if (isCareer) {
+        careerHtml = section("現職情報", "fa-building", [
+          row("現職企業", a.currentCompany),
+          row("役職", a.currentPosition),
+          row("業務内容", a.currentJobDescription),
+          row("経験年数", a.experienceYears ? `${a.experienceYears}年` : null),
+          row("希望入社時期", a.desiredJoinDate),
+        ].join(""));
+      }
+
+      // PR・志望動機
+      const prHtml = textBlock("自己PR", a.pr);
+      const motivationHtml = a.motivation ? textBlock("志望動機", a.motivation) : "";
+      const changeReasonHtml = (isCareer && a.changeReason) ? textBlock("転職理由", a.changeReason) : "";
+
+      // ポートフォリオURL
+      const portfolioUrlHtml = a.portfolio ? `<div class="mb-6">
+        <p class="text-sm font-bold text-gray-500 mb-2">GitHub / ポートフォリオURL</p>
+        <a href="${escapeHtml(a.portfolio)}" target="_blank" class="text-blue-600 hover:underline text-sm break-all">${escapeHtml(a.portfolio)}</a>
+      </div>` : "";
+
+      // 添付ファイル
+      const files = [];
+      // 新方式（MongoDB保存）
+      if (a.resumeFileId) files.push(fileButton(a.resumeFileName || "履歴書", `/api/file/${a.resumeFileId}`));
+      if (a.careerFileId) files.push(fileButton(a.careerFileName || "職務経歴書", `/api/file/${a.careerFileId}`, "fa-file-alt"));
+      if (a.portfolioFileIds && a.portfolioFileIds.length > 0) {
+        a.portfolioFileIds.forEach((pf, i) => {
+          files.push(fileButton(pf.fileName || `作品ファイル ${i+1}`, `/api/file/${pf.fileId}`, "fa-file"));
+        });
+      }
+      // 旧方式（パスベース、後方互換）
+      if (files.length === 0 && a.resume) files.push(fileButton("履歴書", `/${a.resume}`));
+      if (files.length > 0 && a.career && !a.careerFileId) files.push(fileButton("職務経歴書", `/${a.career}`, "fa-file-alt"));
+
+      const filesHtml = files.length > 0 ? `<div class="mb-6">
+        <p class="text-sm font-bold text-gray-500 mb-3">添付ファイル</p>
+        <div class="flex flex-wrap gap-3">${files.join("")}</div>
+      </div>` : "";
+
+      // 人事コメント
+      const hrHtml = `<div class="mb-6">
+        <p class="text-sm font-bold text-gray-500 mb-2">人事担当者からの連絡</p>
+        <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-sm">${escapeHtml(a.hrComment) || "なし"}</div>
+      </div>`;
+
+      document.getElementById("content").innerHTML =
+        headerHtml + basicHtml + addressHtml + eduHtml + prefHtml + careerHtml +
+        prHtml + motivationHtml + changeReasonHtml + portfolioUrlHtml + filesHtml + hrHtml;
+    }
+
+    load();
   </script>
 </body>
 </html>

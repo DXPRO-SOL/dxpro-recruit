@@ -12,10 +12,10 @@ const path = require("path");
 const nodemailer = require("nodemailer");
 const multer = require("multer");
 const fs = require("fs");
-const upload = multer({ dest: "uploads/" }); // 임시 저장 폴더
-const chatUpload = multer({ dest: "uploads/chat/", limits: { fileSize: 10 * 1024 * 1024 } }); // チャット添付 10MB
+const upload = multer({ storage: multer.memoryStorage() }); // メモリに読み込む
+const chatUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-// uploadsディレクトリの確保
+// uploadsディレクトリの確保（チャット用）
 fs.mkdirSync(path.join(__dirname, "uploads/chat"), { recursive: true });
 
 const User = require("./models/User");
@@ -24,6 +24,7 @@ const NewgradApplication = require("./models/NewgradApplication");
 const CareerApplication = require("./models/CareerApplication");
 const Contact = require("./models/Contact");
 const ChatMessage = require("./models/ChatMessage");
+const FileStore = require("./models/FileStore");
 require("dotenv").config();
 
 const app = express();
@@ -215,7 +216,7 @@ async function sendApplicationEmailNew(fields, files) {
   for (const key in files) {
     if (files[key]) {
       const fileList = Array.isArray(files[key]) ? files[key] : [files[key]];
-      fileList.forEach(f => attachments.push({ filename: f.originalname, path: f.path }));
+      fileList.forEach(f => attachments.push({ filename: f.originalname, content: f.buffer }));
     }
   }
 
@@ -290,7 +291,7 @@ async function sendApplicationEmailCareer(fields, files) {
   for (const key in files) {
     if (files[key]) {
       const fileList = Array.isArray(files[key]) ? files[key] : [files[key]];
-      fileList.forEach(f => attachments.push({ filename: f.originalname, path: f.path }));
+      fileList.forEach(f => attachments.push({ filename: f.originalname, content: f.buffer }));
     }
   }
 
@@ -381,56 +382,81 @@ app.post("/apply/newgrad", upload.fields([
 ]), async (req, res) => {
   try {
     const files = req.files || {};
+
+    // ファイルをMongoDBに保存
+    let resumeFileId = null, resumeFileName = null;
+    if (files.resume?.[0]) {
+      const f = files.resume[0];
+      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      resumeFileId = stored._id;
+      resumeFileName = f.originalname;
+    }
+    const portfolioFileIds = [];
+    for (const f of (files.portfolioFiles || [])) {
+      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      portfolioFileIds.push({ fileId: stored._id, fileName: f.originalname });
+    }
+
     const appData = {
       userId: req.session.userId || null,
       ...req.body,
       consent: req.body.consent === "on",
       noAddress: req.body.noAddress === "on" || req.body.noAddress === "true" || req.body.noAddress === true,
-      resume: files.resume?.[0]?.path || "",
-      portfolioFiles: files.portfolioFiles?.map(f => f.path) || []
+      resumeFileId, resumeFileName, portfolioFileIds
     };
 
     const application = new NewgradApplication(appData);
     await application.save();
-
-    // 입력값 전부 포함해서 메일 전송
     await sendApplicationEmailNew(req.body, files);
-
-    res.json({ status:"success", message:"応募完了しました" });
+    res.json({ status: "success", message: "応募完了しました" });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ status:"error", message:"送信失敗" });
+    res.status(500).json({ status: "error", message: "送信失敗" });
   }
 });
 
 // 경력 지원
 app.post("/apply/career", upload.fields([
-  { name:"resume", maxCount:1 },
-  { name:"career", maxCount:1 },
-  { name:"portfolioFiles", maxCount:5 }
-]), async (req,res)=>{
-  try{
+  { name: "resume", maxCount: 1 },
+  { name: "career", maxCount: 1 },
+  { name: "portfolioFiles", maxCount: 5 }
+]), async (req, res) => {
+  try {
     const files = req.files || {};
+
+    let resumeFileId = null, resumeFileName = null;
+    if (files.resume?.[0]) {
+      const f = files.resume[0];
+      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      resumeFileId = stored._id; resumeFileName = f.originalname;
+    }
+    let careerFileId = null, careerFileName = null;
+    if (files.career?.[0]) {
+      const f = files.career[0];
+      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      careerFileId = stored._id; careerFileName = f.originalname;
+    }
+    const portfolioFileIds = [];
+    for (const f of (files.portfolioFiles || [])) {
+      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      portfolioFileIds.push({ fileId: stored._id, fileName: f.originalname });
+    }
+
     const appData = {
       userId: req.session.userId || null,
       ...req.body,
       consent: req.body.consent === "on",
       noAddress: req.body.noAddress === "on" || req.body.noAddress === "true" || req.body.noAddress === true,
-      resume: files.resume?.[0]?.path || undefined,
-      career: files.career?.[0]?.path || undefined,
-      portfolioFiles: files.portfolioFiles?.map(f=>f.path) || []
+      resumeFileId, resumeFileName, careerFileId, careerFileName, portfolioFileIds
     };
 
     const application = new CareerApplication(appData);
     await application.save();
-
-    // 입력값 전부 포함해서 메일 전송
     await sendApplicationEmailCareer(req.body, files);
-
-    res.json({ status:"success", message:"応募完了しました" });
-  }catch(e){
+    res.json({ status: "success", message: "応募完了しました" });
+  } catch (e) {
     console.error(e);
-    res.status(500).json({ status:"error", message:"送信失敗" });
+    res.status(500).json({ status: "error", message: "送信失敗" });
   }
 });
 
@@ -1025,13 +1051,39 @@ app.get("/api/me", async (req, res) => {
 
 // ================== チャット追加API ==================
 
-// チャット添付ファイルアップロード
+// ファイル配信 (MongoDBから直接返す)
+app.get("/api/file/:id", async (req, res) => {
+  try {
+    const file = await FileStore.findById(req.params.id);
+    if (!file) return res.status(404).send("ファイルが見つかりません");
+    res.set("Content-Type", file.mimeType);
+    res.set("Content-Disposition", `inline; filename="${encodeURIComponent(file.originalName)}"`);
+    res.send(file.data);
+  } catch (e) {
+    res.status(500).send("エラーが発生しました");
+  }
+});
+
+// チャット添付ファイルアップロード（MongoDBに保存）
 app.post("/api/chat/upload", chatUpload.single("file"), async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
   if (!req.file) return res.status(400).json({ error: "ファイルがありません" });
-  const isImage = req.file.mimetype.startsWith("image/");
-  const fileUrl = "/uploads/chat/" + req.file.filename;
-  res.json({ fileUrl, fileName: req.file.originalname, fileType: isImage ? "image" : "file" });
+  try {
+    const isImage = req.file.mimetype.startsWith("image/");
+    const stored = await new FileStore({
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      data: req.file.buffer,
+      size: req.file.size
+    }).save();
+    res.json({
+      fileUrl: `/api/file/${stored._id}`,
+      fileName: req.file.originalname,
+      fileType: isImage ? "image" : "file"
+    });
+  } catch (e) {
+    res.status(500).json({ error: "アップロードエラー" });
+  }
 });
 
 // いいねトグル

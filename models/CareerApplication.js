@@ -38,10 +38,16 @@ const CareerApplicationSchema = new mongoose.Schema({
   gold: { type: String }, // 希望年収
 
   // 添付資料
-  career: { type: String }, // 職務経歴書
-  resume: { type: String },
-  portfolioFiles: [String], // 複数ファイル
+  career: { type: String }, // 職務経歴書 (旧)
+  resume: { type: String }, // (旧)
+  portfolioFiles: [String], // 複数ファイル (旧)
   portfolio: { type: String }, // GitHub / URL
+  // MongoDB保存ファイルID（新方式）
+  resumeFileId: { type: mongoose.Schema.Types.ObjectId, ref: "FileStore", default: null },
+  resumeFileName: { type: String },
+  careerFileId: { type: mongoose.Schema.Types.ObjectId, ref: "FileStore", default: null },
+  careerFileName: { type: String },
+  portfolioFileIds: [{ fileId: { type: mongoose.Schema.Types.ObjectId, ref: "FileStore" }, fileName: String }],
 
   // 自己PR
   pr: { type: String },
