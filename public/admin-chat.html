@@ -123,22 +123,29 @@
       const list = document.getElementById("roomList");
       list.innerHTML = `<div class="text-center text-gray-400 text-sm py-6">読み込み中...</div>`;
 
-      // チャット済みルームと全応募一覧を並行取得
-      const [roomsRes, appsRes] = await Promise.all([
-        fetch("/api/chat-rooms"),
-        fetch("/api/admin/all-applications")
-      ]);
-      const rooms = await roomsRes.json();
-      const allApps = await appsRes.json();
+      try {
+        // チャット済みルームと全応募一覧を並行取得
+        const [roomsRes, appsRes] = await Promise.all([
+          fetch("/api/chat-rooms"),
+          fetch("/api/admin/all-applications")
+        ]);
+        const rooms = await roomsRes.json();
+        const allApps = await appsRes.json();
 
-      // チャット済みルームのIDマップ
-      const roomMap = {};
-      rooms.forEach(r => { roomMap[r._id] = r; });
+        // エラーチェック
+        if (!Array.isArray(allApps)) {
+          list.innerHTML = `<div class="text-center text-red-400 text-sm py-10"><i class="fas fa-exclamation-circle block text-3xl mb-2"></i>データ取得エラー<br><small>${allApps.error || ""}</small></div>`;
+          return;
+        }
 
-      if (allApps.length === 0) {
-        list.innerHTML = `<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>応募がありません</div>`;
-        return;
-      }
+        // チャット済みルームのIDマップ
+        const roomMap = {};
+        if (Array.isArray(rooms)) rooms.forEach(r => { roomMap[r._id] = r; });
+
+        if (allApps.length === 0) {
+          list.innerHTML = `<div class="text-center text-gray-400 text-sm py-10"><i class="fas fa-inbox text-3xl block mb-2 text-gray-300"></i>応募がありません</div>`;
+          return;
+        }
 
       list.innerHTML = allApps.map(app => {
         const room = roomMap[app._id];
@@ -167,6 +174,10 @@
           </div>
         </div>`;
       }).join("");
+      } catch (e) {
+        console.error("loadRooms error:", e);
+        list.innerHTML = `<div class="text-center text-red-400 text-sm py-10"><i class="fas fa-exclamation-circle block text-3xl mb-2"></i>読み込みエラーが発生しました</div>`;
+      }
     }
 
     async function joinRoom(applicationId, applicationType) {
