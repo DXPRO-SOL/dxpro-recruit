@@ -216,7 +216,10 @@ async function sendApplicationEmailNew(fields, files) {
   for (const key in files) {
     if (files[key]) {
       const fileList = Array.isArray(files[key]) ? files[key] : [files[key]];
-      fileList.forEach(f => attachments.push({ filename: f.originalname, content: f.buffer }));
+      fileList.forEach(f => {
+        const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+        attachments.push({ filename: fixedName, content: f.buffer });
+      });
     }
   }
 
@@ -291,7 +294,10 @@ async function sendApplicationEmailCareer(fields, files) {
   for (const key in files) {
     if (files[key]) {
       const fileList = Array.isArray(files[key]) ? files[key] : [files[key]];
-      fileList.forEach(f => attachments.push({ filename: f.originalname, content: f.buffer }));
+      fileList.forEach(f => {
+        const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+        attachments.push({ filename: fixedName, content: f.buffer });
+      });
     }
   }
 
@@ -387,14 +393,16 @@ app.post("/apply/newgrad", upload.fields([
     let resumeFileId = null, resumeFileName = null;
     if (files.resume?.[0]) {
       const f = files.resume[0];
-      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
       resumeFileId = stored._id;
-      resumeFileName = f.originalname;
+      resumeFileName = fixedName;
     }
     const portfolioFileIds = [];
     for (const f of (files.portfolioFiles || [])) {
-      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
-      portfolioFileIds.push({ fileId: stored._id, fileName: f.originalname });
+      const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      portfolioFileIds.push({ fileId: stored._id, fileName: fixedName });
     }
 
     const appData = {
@@ -427,19 +435,22 @@ app.post("/apply/career", upload.fields([
     let resumeFileId = null, resumeFileName = null;
     if (files.resume?.[0]) {
       const f = files.resume[0];
-      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
-      resumeFileId = stored._id; resumeFileName = f.originalname;
+      const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      resumeFileId = stored._id; resumeFileName = fixedName;
     }
     let careerFileId = null, careerFileName = null;
     if (files.career?.[0]) {
       const f = files.career[0];
-      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
-      careerFileId = stored._id; careerFileName = f.originalname;
+      const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      careerFileId = stored._id; careerFileName = fixedName;
     }
     const portfolioFileIds = [];
     for (const f of (files.portfolioFiles || [])) {
-      const stored = await new FileStore({ originalName: f.originalname, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
-      portfolioFileIds.push({ fileId: stored._id, fileName: f.originalname });
+      const fixedName = Buffer.from(f.originalname, 'latin1').toString('utf8');
+      const stored = await new FileStore({ originalName: fixedName, mimeType: f.mimetype, data: f.buffer, size: f.size }).save();
+      portfolioFileIds.push({ fileId: stored._id, fileName: fixedName });
     }
 
     const appData = {
@@ -1070,15 +1081,16 @@ app.post("/api/chat/upload", chatUpload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "ファイルがありません" });
   try {
     const isImage = req.file.mimetype.startsWith("image/");
+    const fixedName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
     const stored = await new FileStore({
-      originalName: req.file.originalname,
+      originalName: fixedName,
       mimeType: req.file.mimetype,
       data: req.file.buffer,
       size: req.file.size
     }).save();
     res.json({
       fileUrl: `/api/file/${stored._id}`,
-      fileName: req.file.originalname,
+      fileName: fixedName,
       fileType: isImage ? "image" : "file"
     });
   } catch (e) {
