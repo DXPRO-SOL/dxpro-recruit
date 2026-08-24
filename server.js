@@ -13,6 +13,7 @@ const nodemailer = require("nodemailer");
 const multer = require("multer");
 const fs = require("fs");
 const upload = multer({ dest: "uploads/" }); // 임시 저장 폴더
+const chatUpload = multer({ dest: "uploads/chat/", limits: { fileSize: 10 * 1024 * 1024 } }); // チャット添付 10MB
 
 const User = require("./models/User");
 const Application = require("./models/Application");
@@ -104,6 +105,7 @@ app.use((req, res, next) => {
 // 정적 파일
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads")); // アップロードファイルを公開
+app.use("/uploads/chat", express.static("uploads/chat")); // チャット添付ファイルを公開
 
 // 로그인 API
 app.post("/login", async (req, res) => {
@@ -1022,6 +1024,77 @@ app.get("/api/me", async (req, res) => {
   res.json(user);
 });
 
+// ================== チャット追加API ==================
+
+// チャット添付ファイルアップロード
+app.post("/api/chat/upload", chatUpload.single("file"), async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  if (!req.file) return res.status(400).json({ error: "ファイルがありません" });
+  const isImage = req.file.mimetype.startsWith("image/");
+  const fileUrl = "/uploads/chat/" + req.file.filename;
+  res.json({ fileUrl, fileName: req.file.originalname, fileType: isImage ? "image" : "file" });
+});
+
+// いいねトグル
+app.post("/api/chat/message/:id/like", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const user = await User.findById(req.session.userId).select("lastName firstName username");
+    const userName = user ? `${user.lastName || ""}${user.firstName || user.username}` : "匿名";
+    const msg = await ChatMessage.findById(req.params.id);
+    if (!msg) return res.status(404).json({ error: "メッセージが見つかりません" });
+    const idx = msg.likes.findIndex(l => l.userId === req.session.userId.toString());
+    if (idx >= 0) {
+      msg.likes.splice(idx, 1);
+    } else {
+      msg.likes.push({ userId: req.session.userId.toString(), userName });
+    }
+    await msg.save();
+    io.to(msg.applicationId).emit("messageLiked", { messageId: msg._id.toString(), likes: msg.likes });
+    res.json({ likes: msg.likes });
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// メッセージ編集
+app.put("/api/chat/message/:id", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const msg = await ChatMessage.findById(req.params.id);
+    if (!msg) return res.status(404).json({ error: "メッセージが見つかりません" });
+    if (msg.senderId.toString() !== req.session.userId.toString()) return res.status(403).json({ error: "権限がありません" });
+    if (msg.deleted) return res.status(400).json({ error: "削除済みメッセージは編集できません" });
+    msg.message = req.body.message || msg.message;
+    msg.edited = true;
+    await msg.save();
+    io.to(msg.applicationId).emit("messageEdited", { messageId: msg._id.toString(), message: msg.message });
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
+// メッセージ削除（ソフトデリート）
+app.delete("/api/chat/message/:id", async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
+  try {
+    const user = await User.findById(req.session.userId);
+    const msg = await ChatMessage.findById(req.params.id);
+    if (!msg) return res.status(404).json({ error: "メッセージが見つかりません" });
+    // 送信者本人またはadminのみ削除可
+    const isOwner = msg.senderId.toString() === req.session.userId.toString();
+    const isAdmin = user && user.role === "admin";
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: "権限がありません" });
+    msg.deleted = true;
+    await msg.save();
+    io.to(msg.applicationId).emit("messageDeleted", { messageId: msg._id.toString() });
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ error: "エラーが発生しました" });
+  }
+});
+
 // Socket.io チャット
 io.on("connection", (socket) => {
   socket.on("joinRoom", (applicationId) => {
@@ -1035,15 +1108,25 @@ io.on("connection", (socket) => {
         senderId: data.senderId,
         senderName: data.senderName,
         senderRole: data.senderRole,
-        message: data.message
+        message: data.message || "",
+        fileUrl: data.fileUrl || null,
+        fileName: data.fileName || null,
+        fileType: data.fileType || null
       });
       await msg.save();
       io.to(data.applicationId).emit("newMessage", {
         _id: msg._id,
         applicationId: msg.applicationId,
+        senderId: msg.senderId,
         senderName: msg.senderName,
         senderRole: msg.senderRole,
         message: msg.message,
+        fileUrl: msg.fileUrl,
+        fileName: msg.fileName,
+        fileType: msg.fileType,
+        likes: [],
+        edited: false,
+        deleted: false,
         createdAt: msg.createdAt
       });
     } catch (e) {

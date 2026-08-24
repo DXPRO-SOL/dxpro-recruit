@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>採用担当者とのチャット - DXPRO SOLUTIONS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen flex flex-col">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-[#0b2447] to-[#12395e] text-white px-6 py-4 flex items-center gap-4 shadow-lg">
+    <a href="application-status.html" class="text-white/70 hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-blue-400/30 flex items-center justify-center">
+        <i class="fas fa-user-tie text-sm text-blue-200"></i>
+      </div>
+      <div>
+        <p class="font-semibold text-sm leading-tight">採用担当者</p>
+        <p class="text-white/60 text-xs" id="roomInfo">応募ID: 読み込み中...</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- 応募選択 (複数応募がある場合) -->
+  <div id="roomSelectorWrap" class="bg-white border-b border-gray-100 px-4 py-2 hidden">
+    <select id="roomSelector" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
+      <option value="">応募を選択...</option>
+    </select>
+  </div>
+
+  <!-- メッセージエリア -->
+  <main id="messagesArea" class="flex-1 overflow-y-auto px-4 py-5 space-y-3 pb-24">
+    <div id="emptyState" class="flex flex-col items-center justify-center h-full text-gray-400 py-16">
+      <i class="fas fa-comments text-5xl mb-4 text-gray-300"></i>
+      <p class="text-sm">左上の応募を選択してチャットを開始してください</p>
+    </div>
+  </main>
+
+  <!-- 入力エリア -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 shadow-lg">
+    <div class="flex gap-2 max-w-3xl mx-auto">
+      <input id="msgInput" type="text" placeholder="メッセージを入力..." disabled
+        class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-400">
+      <button id="sendBtn" onclick="sendMessage()" disabled
+        class="bg-blue-700 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let me = null;
+    let currentRoom = null;
+    const positionMap = {
+      frontend: "フロントエンドエンジニア", backend: "バックエンドエンジニア",
+      designer: "UIデザイナー", pm: "プロジェクトマネージャー",
+      consultant: "ITコンサルタント", qaengineer: "QAエンジニア"
+    };
+    const typeMap = { newgrad: "新卒採用", career: "中途採用" };
+
+    async function init() {
+      // 自分の情報を取得
+      const meRes = await fetch("/api/me");
+      if (!meRes.ok) { location.href = "/login.html"; return; }
+      me = await meRes.json();
+
+      // URLパラメータで直接応募IDが指定されている場合
+      const params = new URLSearchParams(location.search);
+      const directId = params.get("applicationId");
+      const directType = params.get("type");
+
+      // 自分の応募一覧を取得
+      const roomsRes = await fetch("/api/my-chat-rooms");
+      const rooms = await roomsRes.json();
+
+      const selector = document.getElementById("roomSelector");
+      rooms.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r._id;
+        opt.dataset.type = r.type;
+        const pos = positionMap[r.position] || r.position;
+        const date = new Date(r.createdAt).toLocaleDateString("ja-JP");
+        opt.textContent = `${typeMap[r.type]} - ${pos} (${date})${r.unread > 0 ? ` 【未読${r.unread}件】` : ""}`;
+        selector.appendChild(opt);
+      });
+
+      if (rooms.length > 1 || !directId) {
+        document.getElementById("roomSelectorWrap").classList.remove("hidden");
+      }
+
+      selector.addEventListener("change", () => {
+        const opt = selector.options[selector.selectedIndex];
+        if (opt.value) joinRoom(opt.value, opt.dataset.type);
+      });
+
+      // 直接指定またはルームが1件のみの場合は自動選択
+      if (directId && directType) {
+        joinRoom(directId, directType);
+        selector.value = directId;
+      } else if (rooms.length === 1) {
+        joinRoom(rooms[0]._id, rooms[0].type);
+        selector.value = rooms[0]._id;
+      }
+    }
+
+    async function joinRoom(applicationId, applicationType) {
+      if (currentRoom) socket.emit("leaveRoom", currentRoom);
+      currentRoom = applicationId;
+      document.getElementById("roomInfo").textContent = `応募ID: ${applicationId.slice(-8)}...`;
+      document.getElementById("emptyState").remove();
+      document.getElementById("msgInput").disabled = false;
+      document.getElementById("sendBtn").disabled = false;
+
+      socket.emit("joinRoom", applicationId);
+
+      // 過去メッセージ取得
+      const res = await fetch(`/api/chat/${applicationId}`);
+      const messages = await res.json();
+      const area = document.getElementById("messagesArea");
+      area.innerHTML = "";
+      if (messages.length === 0) {
+        area.innerHTML = `<div class="text-center text-gray-400 text-sm py-8"><i class="fas fa-comments text-3xl mb-2 block text-gray-300"></i>まだメッセージはありません。最初のメッセージを送ってみましょう。</div>`;
+      }
+      messages.forEach(m => appendMessage(m));
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function appendMessage(msg) {
+      const area = document.getElementById("messagesArea");
+      const isMe = msg.senderRole === me.role || msg.senderName === `${me.lastName}${me.firstName}`;
+      const isMySide = me.role === "admin" ? msg.senderRole === "admin" : msg.senderRole === "user";
+
+      const wrap = document.createElement("div");
+      wrap.className = `flex ${isMySide ? "justify-end" : "justify-start"} items-end gap-2`;
+
+      const time = new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+
+      if (!isMySide) {
+        wrap.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shrink-0">
+            <i class="fas fa-user-tie text-white text-xs"></i>
+          </div>
+          <div class="max-w-[75%]">
+            <p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
+            <div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">${escapeHtml(msg.message)}</div>
+            <p class="text-xs text-gray-300 mt-1">${time}</p>
+          </div>`;
+      } else {
+        wrap.innerHTML = `
+          <div class="max-w-[75%] text-right">
+            <div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block">${escapeHtml(msg.message)}</div>
+            <p class="text-xs text-gray-300 mt-1">${time}</p>
+          </div>`;
+      }
+      area.appendChild(wrap);
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
+      if (!text || !currentRoom) return;
+      socket.emit("sendMessage", {
+        applicationId: currentRoom,
+        applicationType: document.querySelector(`#roomSelector option[value="${currentRoom}"]`)?.dataset.type || "newgrad",
+        senderId: me._id,
+        senderName: `${me.lastName}${me.firstName}`,
+        senderRole: me.role,
+        message: text
+      });
+      input.value = "";
+    }
+
+    socket.on("newMessage", (msg) => {
+      appendMessage(msg);
+      const area = document.getElementById("messagesArea");
+      area.scrollTop = area.scrollHeight;
+    });
+
+    document.getElementById("msgInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    init();
+  </script>
+</body>
+</html>

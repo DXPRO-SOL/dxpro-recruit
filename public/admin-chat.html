@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
-</head>
+  <style>
+    .msg-actions { display: none; }
+    .msg-wrap:hover .msg-actions { display: flex; }
+  </style>
 <body class="bg-gray-50 font-['Noto_Sans_JP'] min-h-screen">
 
   <div class="flex h-screen overflow-hidden">
@@ -61,7 +64,16 @@
 
       <!-- 入力エリア -->
       <div class="bg-white border-t border-gray-100 px-6 py-4">
-        <div class="flex gap-3">
+        <div id="filePreviewBar" class="hidden mb-2 bg-blue-50 rounded-xl px-4 py-2 flex items-center gap-3 text-sm text-blue-700">
+          <i class="fas fa-paperclip"></i>
+          <span id="filePreviewName" class="flex-1 truncate"></span>
+          <button onclick="clearFile()" class="text-blue-400 hover:text-blue-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="flex gap-3 items-center">
+          <label for="fileInput" class="cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" title="ファイルを添付">
+            <i class="fas fa-paperclip text-lg"></i>
+          </label>
+          <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
           <input id="msgInput" type="text" placeholder="返信メッセージを入力..." disabled
             class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50">
           <button onclick="sendMessage()" id="sendBtn" disabled
@@ -73,11 +85,25 @@
     </div>
   </div>
 
+  <!-- 編集モーダル -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl">
+      <h3 class="font-semibold text-gray-800 mb-3">メッセージを編集</h3>
+      <input id="editInput" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+      <div class="flex gap-2 mt-4">
+        <button onclick="closeEdit()" class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm hover:bg-gray-50">キャンセル</button>
+        <button onclick="submitEdit()" class="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm hover:bg-blue-800">保存</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const socket = io();
     let me = null;
     let currentRoom = null;
     let currentType = null;
+    let pendingFile = null;
+    let editingMessageId = null;
     const positionMap = {
       frontend: "フロントエンドエンジニア", backend: "バックエンドエンジニア",
       designer: "UIデザイナー", pm: "プロジェクトマネージャー",
@@ -183,10 +209,34 @@
     function appendMessage(msg) {
       const area = document.getElementById("messagesArea");
       const isMine = msg.senderRole === "admin";
+      const isOwner = me && msg.senderId && msg.senderId.toString() === me._id.toString();
+      const canDelete = isOwner || me.role === "admin";
       const time = new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
 
       const wrap = document.createElement("div");
-      wrap.className = `flex ${isMine ? "justify-end" : "justify-start"} items-end gap-2`;
+      wrap.className = `msg-wrap flex ${isMine ? "justify-end" : "justify-start"} items-end gap-2`;
+      wrap.dataset.msgId = msg._id;
+
+      if (msg.deleted) {
+        wrap.innerHTML = `<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>`;
+        area.appendChild(wrap); return;
+      }
+
+      // ファイル
+      let fileHtml = "";
+      if (msg.fileUrl) {
+        if (msg.fileType === "image") fileHtml = `<a href="${msg.fileUrl}" target="_blank"><img src="${msg.fileUrl}" class="rounded-xl max-w-[220px] max-h-[180px] object-cover mt-2 border border-white/20" /></a>`;
+        else fileHtml = `<a href="${msg.fileUrl}" target="_blank" class="flex items-center gap-2 mt-2 underline text-sm opacity-80"><i class="fas fa-file-download"></i>${escapeHtml(msg.fileName || "添付ファイル")}</a>`;
+      }
+
+      const liked = me && (msg.likes || []).some(l => l.userId === me._id.toString());
+      const likeCount = (msg.likes || []).length;
+      const likeColor = liked ? "text-blue-500" : (isMine ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-blue-500");
+      const likeBtn = `<button class="like-btn ${likeColor} text-xs flex items-center gap-1 transition-colors" onclick="toggleLike('${msg._id}')"><i class="fas fa-thumbs-up"></i>${likeCount > 0 ? `<span>${likeCount}</span>` : ""}</button>`;
+      const editBtn = (isOwner && msg.message && !msg.fileUrl) ? `<button class="text-gray-300 hover:text-blue-500 text-xs" onclick="openEdit('${msg._id}',this)" title="編集"><i class="fas fa-pen"></i></button>` : "";
+      const delBtn = canDelete ? `<button class="text-gray-300 hover:text-red-400 text-xs" onclick="deleteMessage('${msg._id}')" title="削除"><i class="fas fa-trash-alt"></i></button>` : "";
+      const textHtml = msg.message ? `<p class="break-words">${escapeHtml(msg.message)}</p>` : "";
+      const editedBadge = msg.edited ? `<span class="text-xs opacity-50 ml-1">(編集済)</span>` : "";
 
       if (!isMine) {
         wrap.innerHTML = `
@@ -195,33 +245,71 @@
           </div>
           <div class="max-w-[65%]">
             <p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
-            <div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">${escapeHtml(msg.message)}</div>
-            <p class="text-xs text-gray-300 mt-1">${time}</p>
+            <div class="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm text-sm text-gray-800">${textHtml}${fileHtml}${editedBadge}</div>
+            <div class="flex items-center gap-2 mt-1"><p class="text-xs text-gray-300">${time}</p>${likeBtn}<div class="msg-actions flex items-center gap-1.5">${editBtn}${delBtn}</div></div>
           </div>`;
       } else {
         wrap.innerHTML = `
           <div class="max-w-[65%] text-right">
             <p class="text-xs text-gray-400 mb-1">${msg.senderName}</p>
-            <div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block">${escapeHtml(msg.message)}</div>
-            <p class="text-xs text-gray-300 mt-1">${time}</p>
+            <div class="bg-blue-700 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm text-sm inline-block text-left">${textHtml}${fileHtml}${editedBadge}</div>
+            <div class="flex items-center justify-end gap-2 mt-1"><div class="msg-actions flex items-center gap-1.5">${editBtn}${delBtn}</div>${likeBtn}<p class="text-xs text-gray-300">${time}</p></div>
           </div>`;
       }
       area.appendChild(wrap);
     }
 
-    function sendMessage() {
+    function handleFileSelect(e) {
+      const file = e.target.files[0]; if (!file) return;
+      pendingFile = file;
+      document.getElementById("filePreviewName").textContent = file.name;
+      document.getElementById("filePreviewBar").classList.remove("hidden");
+    }
+    function clearFile() {
+      pendingFile = null;
+      document.getElementById("fileInput").value = "";
+      document.getElementById("filePreviewBar").classList.add("hidden");
+    }
+
+    async function sendMessage() {
       const input = document.getElementById("msgInput");
       const text = input.value.trim();
-      if (!text || !currentRoom) return;
+      if (!text && !pendingFile) return;
+      if (!currentRoom) return;
+      let fileUrl = null, fileName = null, fileType = null;
+      if (pendingFile) {
+        const fd = new FormData(); fd.append("file", pendingFile);
+        const up = await fetch("/api/chat/upload", { method: "POST", body: fd });
+        const upData = await up.json();
+        fileUrl = upData.fileUrl; fileName = upData.fileName; fileType = upData.fileType;
+        clearFile();
+      }
       socket.emit("sendMessage", {
-        applicationId: currentRoom,
-        applicationType: currentType,
-        senderId: me._id,
-        senderName: `${me.lastName}${me.firstName}`,
-        senderRole: "admin",
-        message: text
+        applicationId: currentRoom, applicationType: currentType,
+        senderId: me._id, senderName: `${me.lastName||""}${me.firstName||me.username}`, senderRole: "admin",
+        message: text, fileUrl, fileName, fileType
       });
       input.value = "";
+    }
+
+    async function toggleLike(messageId) { await fetch(`/api/chat/message/${messageId}/like`, { method: "POST" }); }
+
+    function openEdit(messageId, btn) {
+      editingMessageId = messageId;
+      const bubble = btn.closest(".msg-wrap").querySelector("p.break-words");
+      document.getElementById("editInput").value = bubble ? bubble.textContent : "";
+      document.getElementById("editModal").classList.remove("hidden");
+    }
+    function closeEdit() { editingMessageId = null; document.getElementById("editModal").classList.add("hidden"); }
+    async function submitEdit() {
+      const newText = document.getElementById("editInput").value.trim();
+      if (!newText || !editingMessageId) return;
+      await fetch(`/api/chat/message/${editingMessageId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: newText }) });
+      closeEdit();
+    }
+    async function deleteMessage(messageId) {
+      if (!confirm("このメッセージを削除しますか？")) return;
+      await fetch(`/api/chat/message/${messageId}`, { method: "DELETE" });
     }
 
     socket.on("newMessage", (msg) => {
@@ -230,9 +318,28 @@
         const area = document.getElementById("messagesArea");
         area.scrollTop = area.scrollHeight;
       } else {
-        // 別ルームに未読バッジ追加
         loadRooms();
       }
+    });
+
+    socket.on("messageLiked", ({ messageId, likes }) => {
+      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
+      const liked = me && likes.some(l => l.userId === me._id.toString());
+      const isMySide = wrap.classList.contains("justify-end");
+      const color = liked ? "text-blue-500" : (isMySide ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-blue-500");
+      const btn = wrap.querySelector(".like-btn");
+      if (btn) { btn.className = `like-btn ${color} text-xs flex items-center gap-1 transition-colors`; btn.innerHTML = `<i class="fas fa-thumbs-up"></i>${likes.length > 0 ? `<span>${likes.length}</span>` : ""}`; }
+    });
+
+    socket.on("messageEdited", ({ messageId, message }) => {
+      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
+      const bubble = wrap.querySelector("p.break-words"); if (bubble) bubble.textContent = message;
+      if (!wrap.querySelector(".opacity-50")) { const d = wrap.querySelector(".bg-white,.bg-blue-700"); if (d) d.insertAdjacentHTML("beforeend", `<span class="text-xs opacity-50 ml-1">(編集済)</span>`); }
+    });
+
+    socket.on("messageDeleted", ({ messageId }) => {
+      const wrap = document.querySelector(`.msg-wrap[data-msg-id="${messageId}"]`); if (!wrap) return;
+      wrap.innerHTML = `<p class="text-xs text-gray-300 italic px-4 py-1">このメッセージは削除されました</p>`;
     });
 
     document.getElementById("msgInput").addEventListener("keydown", (e) => {
