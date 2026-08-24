@@ -116,7 +116,6 @@
         row("応募日", new Date(a.createdAt).toLocaleDateString("ja-JP")),
         row("生年月日", a.birthdate ? new Date(a.birthdate).toLocaleDateString("ja-JP") : null),
         row("性別", a.gender),
-        row("電話", a.email),
         row("メール", a.email),
         row("電話番号", a.phone),
       ].join(""));
@@ -168,7 +167,8 @@
 
       // 添付ファイル
       const files = [];
-      // 新方式（MongoDB保存）
+      let hasOldFiles = false;
+      // 新方式（MongoDB保存 - v22以降）
       if (a.resumeFileId) files.push(fileButton(a.resumeFileName || "履歴書", `/api/file/${a.resumeFileId}`));
       if (a.careerFileId) files.push(fileButton(a.careerFileName || "職務経歴書", `/api/file/${a.careerFileId}`, "fa-file-alt"));
       if (a.portfolioFileIds && a.portfolioFileIds.length > 0) {
@@ -176,14 +176,26 @@
           files.push(fileButton(pf.fileName || `作品ファイル ${i+1}`, `/api/file/${pf.fileId}`, "fa-file"));
         });
       }
-      // 旧方式（パスベース、後方互換）
-      if (files.length === 0 && a.resume) files.push(fileButton("履歴書", `/${a.resume}`));
-      if (files.length > 0 && a.career && !a.careerFileId) files.push(fileButton("職務経歴書", `/${a.career}`, "fa-file-alt"));
+      // 旧方式（パスベース）- ファイルはHerokuで消えているため注記のみ表示
+      if (files.length === 0 && (a.resume || a.career || (a.portfolioFiles && a.portfolioFiles.length > 0))) {
+        hasOldFiles = true;
+      }
 
-      const filesHtml = files.length > 0 ? `<div class="mb-6">
-        <p class="text-sm font-bold text-gray-500 mb-3">添付ファイル</p>
-        <div class="flex flex-wrap gap-3">${files.join("")}</div>
-      </div>` : "";
+      let filesHtml = "";
+      if (files.length > 0) {
+        filesHtml = `<div class="mb-6">
+          <p class="text-sm font-bold text-gray-500 mb-3">添付ファイル</p>
+          <div class="flex flex-wrap gap-3">${files.join("")}</div>
+        </div>`;
+      } else if (hasOldFiles) {
+        filesHtml = `<div class="mb-6">
+          <p class="text-sm font-bold text-gray-500 mb-3">添付ファイル</p>
+          <div class="flex items-start gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+            <i class="fas fa-exclamation-triangle mt-0.5 shrink-0"></i>
+            <span>この応募のファイルはサーバーの更新により取得できなくなりました。<br>お手数ですが再度ファイルをアップロードし応募しなおしてください。</span>
+          </div>
+        </div>`;
+      }
 
       // 人事コメント
       const hrHtml = `<div class="mb-6">
