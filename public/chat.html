@@ -96,7 +96,8 @@
         opt.value = r._id; opt.dataset.type = r.type;
         const pos = positionMap[r.position] || r.position;
         const date = new Date(r.createdAt).toLocaleDateString("ja-JP");
-        opt.textContent = `${typeMap[r.type]} - ${pos} (${date})${r.unread > 0 ? ` 【未読${r.unread}件】` : ""}`;
+        const name = (r.lastName || r.firstName) ? ` - ${r.lastName || ""}${r.firstName || ""}` : "";
+        opt.textContent = `${typeMap[r.type]}${name} - ${pos} (${date})${r.unread > 0 ? ` 【未読${r.unread}件】` : ""}`;
         selector.appendChild(opt);
       });
       if (rooms.length > 1 || !directId) document.getElementById("roomSelectorWrap").classList.remove("hidden");

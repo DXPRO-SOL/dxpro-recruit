@@ -1036,8 +1036,11 @@ app.get("/api/admin/all-applications", async (req, res) => {
 app.get("/api/my-chat-rooms", async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: "ログインが必要です" });
   try {
-    const newgradApps = await NewgradApplication.find({ userId: req.session.userId }).select("_id position createdAt");
-    const careerApps = await CareerApplication.find({ userId: req.session.userId }).select("_id position createdAt");
+    const user = await User.findById(req.session.userId);
+    const isAdmin = user && user.role === "admin";
+    const query = isAdmin ? {} : { userId: req.session.userId };
+    const newgradApps = await NewgradApplication.find(query).select("_id position lastName firstName createdAt");
+    const careerApps = await CareerApplication.find(query).select("_id position lastName firstName createdAt");
     const allApps = [
       ...newgradApps.map(a => ({ ...a.toObject(), type: "newgrad" })),
       ...careerApps.map(a => ({ ...a.toObject(), type: "career" }))
